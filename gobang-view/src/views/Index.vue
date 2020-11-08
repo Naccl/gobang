@@ -73,7 +73,7 @@
 					//恢复棋盘状态（清空预落子红框）
 					this.context.putImageData(this.lastStep, 0, 0)
 					//落子
-					this.drawDot(x, y, this.gridSpacing / 2.1, this.pieceColor[this.step % 2])
+					this.drawChess(x, y, this.gridSpacing / 2.1, this.pieceColor[this.step % 2])
 					//保存棋盘状态
 					this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
 					//箭头标记最后一个棋子
@@ -91,6 +91,7 @@
 			leaveEvent(e) {
 				this.context.putImageData(this.lastStatus, 0, 0)
 			},
+			//绘制最后一个棋子的标记
 			drawLastChess(x, y) {
 				const {gridSpacing} = this
 				let length = gridSpacing / 6
@@ -147,6 +148,21 @@
 				context.closePath()
 				context.stroke()
 			},
+			//画单像素的线条
+			drawOnePixelLine(fromX, fromY, toX, toY, color) {
+				const {context} = this
+				context.strokeStyle = color
+				context.save()
+				context.translate(0.5, 0.5)
+				context.lineWidth = 1.00
+				context.strokeStyle = color
+				context.beginPath()
+				context.moveTo(fromX, fromY)
+				context.lineTo(toX, toY)
+				context.closePath()
+				context.stroke()
+				context.restore()
+			},
 			//获取点击事件在棋盘上对应的坐标
 			getX(e) {
 				const {margin, gridSpacing} = this
@@ -175,10 +191,10 @@
 				const {margin, gridSpacing, rows, cols} = this
 				let boardLineColor = '#555'
 				for (let i = 0; i < rows; i++) {
-					this.drawLine(margin, margin + i * gridSpacing, margin + (cols - 1) * gridSpacing, margin + i * gridSpacing, boardLineColor)
+					this.drawOnePixelLine(margin, margin + i * gridSpacing, margin + (cols - 1) * gridSpacing, margin + i * gridSpacing, boardLineColor)
 				}
 				for (let i = 0; i < cols; i++) {
-					this.drawLine(margin + i * gridSpacing, margin, margin + i * gridSpacing, margin + (rows - 1) * gridSpacing, boardLineColor)
+					this.drawOnePixelLine(margin + i * gridSpacing, margin, margin + i * gridSpacing, margin + (rows - 1) * gridSpacing, boardLineColor)
 				}
 				//绘制棋盘上的五个点
 				let radius = gridSpacing / 9
@@ -206,6 +222,22 @@
 				context.arc(this.getPixel(x), this.getPixel(y), radius, 0, 2 * Math.PI)
 				context.closePath()
 				context.fillStyle = color
+				context.fill()
+			},
+			//绘制棋子
+			drawChess(x, y, radius, color) {
+				const {context, gridSpacing} = this
+				let pixelX = this.getPixel(x)
+				let pixelY = this.getPixel(y)
+				let rad = gridSpacing / 4
+				let r0 = color === 'black' ? 20 : 70
+				const gradient = context.createRadialGradient(pixelX + rad, pixelY - rad, r0, pixelX + rad, pixelY - rad, 0)
+				gradient.addColorStop(0, '#000')
+				gradient.addColorStop(1, '#fff')
+				context.beginPath()
+				context.arc(pixelX, pixelY, radius, 0, 2 * Math.PI)
+				context.closePath()
+				context.fillStyle = gradient
 				context.fill()
 			},
 			//重新开始
