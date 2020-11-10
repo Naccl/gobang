@@ -1,0 +1,12 @@
+html,
+body,
+#app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #efefef;
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: left top;
+    background-repeat: no-repeat;
+}
