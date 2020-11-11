@@ -6,7 +6,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
-import top.naccl.gobang.manager.WebSocketSessionManager;
+import top.naccl.gobang.manager.SessionManager;
 
 import java.security.Principal;
 
@@ -26,7 +26,7 @@ public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecor
 				Principal principal = session.getPrincipal();
 				if (principal != null) {
 					//握手时身份校验成功，将websocket session存入管理器
-					WebSocketSessionManager.add(principal.getName(), session);
+					SessionManager.add(principal.getName(), session);
 				} else {
 					//握手时身份校验失败，关闭session
 					session.close();
@@ -40,7 +40,9 @@ public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecor
 				Principal principal = session.getPrincipal();
 				if (principal != null) {
 					//将websocket移出session管理器
-					WebSocketSessionManager.remove(principal.getName());
+					SessionManager.remove(principal.getName());
+					//todo 如果此用户创建了房间，将房间移除或转让房主
+
 				}
 				super.afterConnectionClosed(session, closeStatus);
 			}

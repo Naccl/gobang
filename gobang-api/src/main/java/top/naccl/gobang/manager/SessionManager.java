@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Date: 2020-11-09
  */
 @Slf4j
-public class WebSocketSessionManager {
+public class SessionManager {
 	private static ConcurrentHashMap<String, WebSocketSession> manager = new ConcurrentHashMap<>();
 
 	public static void add(String key, WebSocketSession webSocketSession) {
@@ -27,5 +27,9 @@ public class WebSocketSessionManager {
 	public static WebSocketSession get(String key) {
 		log.info("查询webSocket连接: username = {}", key);
 		return manager.get(key);
+	}
+
+	public static int count() {
+		return manager.size();
 	}
 }

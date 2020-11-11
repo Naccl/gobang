@@ -4,7 +4,6 @@ import Index from "@/views/Index";
 import Login from "@/views/login/Login";
 import Home from "@/views/home/Home";
 import Game from "@/views/game/Game";
-import Test from "@/views/Test";
 
 Vue.use(VueRouter)
 
@@ -28,13 +27,6 @@ const routes = [
 		component: Home,
 		meta: {
 			title: '首页'
-		}
-	},
-	{
-		path: '/test',
-		component: Test,
-		meta: {
-			title: '测试'
 		}
 	},
 	{

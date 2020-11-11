@@ -40,12 +40,8 @@ public class Result {
 		return new Result(200, msg);
 	}
 
-	public static Result error(String msg) {
-		return new Result(500, msg);
-	}
-
-	public static Result error() {
-		return new Result(500, "异常错误");
+	public static Result refuse(String msg) {
+		return new Result(403, msg);
 	}
 
 	public static Result create(Integer code, String msg, Object data) {
