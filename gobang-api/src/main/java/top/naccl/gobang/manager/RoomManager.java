@@ -56,4 +56,17 @@ public class RoomManager {
 		}
 		return false;
 	}
+
+	public static Room getRoomByUsername(String username) {
+		if (manager.containsKey(username)) {
+			return manager.get(username);
+		}
+		for (String owner : manager.keySet()) {
+			Room room = manager.get(owner);
+			if (username.equals(room.getPlayer())) {
+				return room;
+			}
+		}
+		return null;
+	}
 }

@@ -7,14 +7,17 @@
 			</div>
 			<div class="row">
 				<el-button size="mini" type="primary" @click="restart">重新开始</el-button>
-				<el-button size="mini" type="primary" @click="">悔棋</el-button>
-				<el-button size="mini" type="primary" @click="">和棋</el-button>
+				<el-button size="mini" type="primary" @click="retract">悔棋</el-button>
+				<el-button size="mini" type="primary" @click="heqi">和棋</el-button>
+				<el-button size="mini" type="primary" @click="exit">退出</el-button>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+	import {mapState} from 'vuex'
+
 	export default {
 		name: "Game",
 		data() {
@@ -24,15 +27,16 @@
 				rows: 15,//行数
 				cols: 15,//列数
 				canvas: null,
-				context: null,
-				lastStep: null,
-				lastStatus: null,
+				context: null,//canvas.getContext("2d")
+				lastStep: null,//最后一个棋子落下时的棋盘状态
+				lastStatus: null,//最后一个棋子被标记后的棋盘状态
 				matrixChessBoard: [],//记录棋盘落子情况
 				pieceColor: ["black", "white"], //棋子颜色
 				step: 0, //记录当前步数
 			}
 		},
 		computed: {
+			...mapState(['stompClient']),
 			canvasWidth() {
 				return this.margin * 2 + this.gridSpacing * (this.cols - 1)
 			},
@@ -44,13 +48,24 @@
 			this.init()
 		},
 		methods: {
+			exit(){
+				this.stompClient.send('/send/exitRoom')
+				this.$router.push('/home')
+			},
+
+			retract(){
+
+			},
+			heqi(){
+
+			},
 			init() {
 				this.canvas = this.$refs.canvas
 				this.context = this.canvas.getContext("2d")
 				this.drawBoard()
 				this.initMatrixChessBoard()
 				this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
-				this.lastStatus = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
+				this.lastStatus = this.lastStep
 				this.canvas.addEventListener('click', e => this.clickEvent(e))
 				this.canvas.addEventListener('mousemove', e => this.moveEvent(e))
 				this.canvas.addEventListener('mouseleave', e => this.leaveEvent(e))
