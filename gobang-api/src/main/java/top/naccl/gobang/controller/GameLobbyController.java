@@ -135,28 +135,30 @@ public class GameLobbyController {
 				newRoom.setOwner(player);
 				RoomManager.add(player, newRoom);
 				RoomManager.remove(username);
-				//游戏对局也做同样的处理
-				Game newGame = new Game();
-				newGame.setOwner(player);
-				GameManager.add(player, newGame);
-				GameManager.remove(username);
 				//通知大厅所有人更新房间信息
 				Map<String, Object> map = new HashMap<>();
 				map.put("owner", username);
 				map.put("room", newRoom);
 				sender.convertAndSend("/topic/updateRoom", Result.ok("", map));
+				//游戏对局也做同样的处理
+				Game newGame = new Game();
+				newGame.setOwner(player);
+				GameManager.add(player, newGame);
+				GameManager.remove(username);
+				//todo 告诉第二个玩家 房主已经退出
 			}
 		} else {
 			//退出房间的是第二个玩家，直接退出
-			Map<String, Object> map = new HashMap<>();
 			room.setPlayer(null);
 			Game game = GameManager.get(room.getOwner());
 			game.setPlayer(null);
 			game.setPlayerReady(false);
+			Map<String, Object> map = new HashMap<>();
 			map.put("owner", room.getOwner());
 			map.put("room", room);
 			//通知大厅所有人更新房间信息
 			sender.convertAndSend("/topic/updateRoom", Result.ok("", map));
+			//todo 告诉房主 第二个玩家已经退出
 		}
 	}
 }

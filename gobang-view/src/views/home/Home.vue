@@ -10,7 +10,8 @@
 				<span class="user">{{ room.owner }}</span>
 				<span class="table">VS</span>
 				<span class="user">{{ room.player }}</span>
-				<el-button type="primary" size="mini" v-if="!room.isPlaying" @click="enterRoom(room.owner)">加入房间</el-button>
+				<el-button type="primary" size="mini" v-if="!room.playing" @click="enterRoom(room.owner)">加入房间</el-button>
+				<el-tag effect="dark" size="medium" v-else>游戏中</el-tag>
 			</li>
 		</ul>
 	</div>
@@ -100,12 +101,14 @@
 				//订阅大厅房间更新消息
 				this.subscribeList.push(this.stompClient.subscribe('/topic/updateRoom', response => {
 					const resp = JSON.parse(response.body)
+					console.log(resp)
 					this.roomList.some(room => {
+						console.log(room)
 						if (room.owner === resp.data.owner) {
 							room.owner = resp.data.room.owner
 							room.player = resp.data.room.player
-							room.isPlaying = resp.data.room.isPlaying
-							return
+							room.playing = resp.data.room.playing
+							return true
 						}
 					})
 				}))

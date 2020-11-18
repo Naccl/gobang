@@ -18,7 +18,7 @@
 					<canvas ref="canvas" :width="canvasWidth" :height="canvasHeight">Your browser does not support the HTML5 canvas tag.</canvas>
 				</div>
 				<div class="row">
-					<el-button size="mini" type="primary" @click="ready">准备</el-button>
+					<el-button size="mini" type="primary" @click="ready" :disabled="isReady">准备</el-button>
 					<el-button size="mini" type="primary" @click="retract">悔棋</el-button>
 					<el-button size="mini" type="primary" @click="heqi">和棋</el-button>
 					<el-button size="mini" type="primary" @click="capitulate">认输</el-button>
@@ -40,10 +40,12 @@
 		data() {
 			return {
 				subscribeList: [],
-				owner: '',
-				player: '',
-				ownerStatus: '',
-				playerStatus: '',
+				me: '',//我的用户名
+				owner: '',//房主的用户名
+				player: '',//第二个玩家的用户名
+				ownerStatus: '',//房主的状态
+				playerStatus: '',//第二个玩家的状态
+				isReady: false,//我是否已经准备
 
 				margin: 30,//边距
 				gridSpacing: 36,//网格间距
@@ -81,6 +83,12 @@
 		methods: {
 			//准备
 			ready() {
+				if (this.me === this.owner) {
+					this.ownerStatus = '准备'
+				} else {
+					this.playerStatus = '准备'
+				}
+				this.isReady = true
 				this.stompClient.send("/send/ready", {}, this.owner)
 			},
 			//悔棋
@@ -104,6 +112,7 @@
 				//获取当前游戏对局信息
 				this.subscribeList.push(this.stompClient.subscribe('/send/game', response => {
 					const resp = JSON.parse(response.body)
+					this.me = resp.data.me
 					this.owner = resp.data.owner
 					this.player = resp.data.player
 					this.ownerStatus = resp.data.ownerReady ? '准备' : ''
@@ -122,6 +131,12 @@
 					} else {
 						this.playerStatus = '准备'
 					}
+				}))
+				//订阅游戏开始消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/start', response => {
+					const resp = JSON.parse(response.body)
+					console.log(resp)
+					//todo 处理游戏开始事件
 				}))
 			},
 			//取消所有订阅
