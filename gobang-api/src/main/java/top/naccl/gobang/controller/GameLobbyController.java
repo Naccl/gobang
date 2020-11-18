@@ -7,8 +7,10 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RestController;
+import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
 import top.naccl.gobang.manager.SessionManager;
+import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.Room;
 
@@ -65,8 +67,10 @@ public class GameLobbyController {
 		}
 		Room room = new Room();
 		room.setOwner(username);
-		room.setIsPlaying(false);
 		RoomManager.add(username, room);
+		Game game = new Game();
+		game.setOwner(username);
+		GameManager.add(username, game);
 		//推送成功消息给此用户
 		sender.convertAndSendToUser(username, "/topic/createRoom", Result.ok(""));
 		//推送此消息给 所有在游戏大厅的用户
@@ -93,8 +97,12 @@ public class GameLobbyController {
 			return;
 		}
 		room.setPlayer(username);
+		Game game = GameManager.get(owner);
+		game.setPlayer(username);
 		//推送成功消息给此用户
 		sender.convertAndSendToUser(username, "/topic/enterRoom", Result.ok(""));
+		//推送此消息给房主
+		sender.convertAndSendToUser(owner, "/topic/enterRoom", Result.ok("", username));
 		//推送此消息给 所有在游戏大厅的用户
 		sender.convertAndSend("/topic/enterRoom", Result.ok("", room));
 	}
@@ -114,15 +122,24 @@ public class GameLobbyController {
 			if (room.getPlayer() == null) {
 				//房间中不存在第二个玩家，直接移除房间并通知大厅所有人
 				RoomManager.remove(username);
-				sender.convertAndSend("/topic/removeRoom", Result.ok("", username));
+				GameManager.remove(username);
+				Map<String, Object> map = new HashMap<>();
+				map.put("owner", username);
+				//房主退出房间后回到大厅，房间数量可能显示不准确
+				map.put("roomCount", RoomManager.count());
+				sender.convertAndSend("/topic/removeRoom", Result.ok("", map));
 			} else {
 				//房间中存在第二个玩家，转让房主
 				String player = room.getPlayer();
 				Room newRoom = new Room();
 				newRoom.setOwner(player);
-				newRoom.setIsPlaying(false);
 				RoomManager.add(player, newRoom);
 				RoomManager.remove(username);
+				//游戏对局也做同样的处理
+				Game newGame = new Game();
+				newGame.setOwner(player);
+				GameManager.add(player, newGame);
+				GameManager.remove(username);
 				//通知大厅所有人更新房间信息
 				Map<String, Object> map = new HashMap<>();
 				map.put("owner", username);
@@ -133,6 +150,9 @@ public class GameLobbyController {
 			//退出房间的是第二个玩家，直接退出
 			Map<String, Object> map = new HashMap<>();
 			room.setPlayer(null);
+			Game game = GameManager.get(room.getOwner());
+			game.setPlayer(null);
+			game.setPlayerReady(false);
 			map.put("owner", room.getOwner());
 			map.put("room", room);
 			//通知大厅所有人更新房间信息

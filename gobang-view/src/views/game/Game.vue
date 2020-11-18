@@ -1,15 +1,32 @@
 <template>
-	<div class="container">
-		<h2>五子棋</h2>
-		<div class="main">
-			<div class="board">
-				<canvas ref="canvas" :width="canvasWidth" :height="canvasHeight">Your browser does not support the HTML5 canvas tag.</canvas>
+	<div>
+		<h2 class="title">五子棋</h2>
+		<div class="container">
+			<div class="left-column">
+				<div class="owner">
+					<h2>{{ owner }}</h2>
+					<p>{{ ownerStatus }}</p>
+				</div>
+
+				<div class="player">
+					<h2>{{ player }}</h2>
+					<p>{{ playerStatus }}</p>
+				</div>
 			</div>
-			<div class="row">
-				<el-button size="mini" type="primary" @click="restart">重新开始</el-button>
-				<el-button size="mini" type="primary" @click="retract">悔棋</el-button>
-				<el-button size="mini" type="primary" @click="heqi">和棋</el-button>
-				<el-button size="mini" type="primary" @click="exit">退出</el-button>
+			<div class="main">
+				<div class="board">
+					<canvas ref="canvas" :width="canvasWidth" :height="canvasHeight">Your browser does not support the HTML5 canvas tag.</canvas>
+				</div>
+				<div class="row">
+					<el-button size="mini" type="primary" @click="ready">准备</el-button>
+					<el-button size="mini" type="primary" @click="retract">悔棋</el-button>
+					<el-button size="mini" type="primary" @click="heqi">和棋</el-button>
+					<el-button size="mini" type="primary" @click="capitulate">认输</el-button>
+					<el-button size="mini" type="primary" @click="exit">退出</el-button>
+				</div>
+			</div>
+			<div class="right-column">
+				聊天框
 			</div>
 		</div>
 	</div>
@@ -22,6 +39,12 @@
 		name: "Game",
 		data() {
 			return {
+				subscribeList: [],
+				owner: '',
+				player: '',
+				ownerStatus: '',
+				playerStatus: '',
+
 				margin: 30,//边距
 				gridSpacing: 36,//网格间距
 				rows: 15,//行数
@@ -44,22 +67,72 @@
 				return this.margin * 2 + this.gridSpacing * (this.rows - 1)
 			}
 		},
+		beforeRouteLeave(to, from, next) {
+			this.stompClient.send('/send/exitRoom')
+			this.unsubscribe()
+			next()
+		},
+		created() {
+			this.initSubscribe()
+		},
 		mounted() {
-			this.init()
+			this.initCanvas()
 		},
 		methods: {
-			exit(){
-				this.stompClient.send('/send/exitRoom')
+			//准备
+			ready() {
+				this.stompClient.send("/send/ready", {}, this.owner)
+			},
+			//悔棋
+			retract() {
+
+			},
+			//和棋
+			heqi() {
+
+			},
+			//认输
+			capitulate() {
+
+			},
+			//退出游戏房间
+			exit() {
 				this.$router.push('/home')
 			},
-
-			retract(){
-
+			//初始化订阅消息
+			initSubscribe() {
+				//获取当前游戏对局信息
+				this.subscribeList.push(this.stompClient.subscribe('/send/game', response => {
+					const resp = JSON.parse(response.body)
+					this.owner = resp.data.owner
+					this.player = resp.data.player
+					this.ownerStatus = resp.data.ownerReady ? '准备' : ''
+					this.playerStatus = resp.data.playerReady ? '准备' : ''
+				}))
+				//房主订阅玩家进入房间的消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/enterRoom', response => {
+					const resp = JSON.parse(response.body)
+					this.player = resp.data
+				}))
+				//订阅对手准备消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/ready', response => {
+					const resp = JSON.parse(response.body)
+					if (resp.data === this.owner) {
+						this.ownerStatus = '准备'
+					} else {
+						this.playerStatus = '准备'
+					}
+				}))
 			},
-			heqi(){
-
+			//取消所有订阅
+			unsubscribe() {
+				this.subscribeList.forEach(sub => {
+					sub.unsubscribe()
+				})
+				this.subscribeList = []
 			},
-			init() {
+			//初始化棋盘
+			initCanvas() {
 				this.canvas = this.$refs.canvas
 				this.context = this.canvas.getContext("2d")
 				this.drawBoard()
@@ -260,8 +333,43 @@
 </script>
 
 <style scoped>
-	.container {
+	.title {
 		text-align: center;
+	}
+
+	.container {
+		width: 1300px;
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		-webkit-box-orient: horizontal;
+		-webkit-box-direction: normal;
+		-ms-flex-direction: row;
+		flex-direction: row;
+		-ms-flex-wrap: wrap;
+		flex-wrap: wrap;
+		-webkit-box-align: stretch;
+		-ms-flex-align: stretch;
+		align-items: stretch;
+		padding: 0;
+	}
+
+	.left-column, .right-column {
+		width: 27.5%;
+		position: relative;
+		display: inline-block;
+		vertical-align: top;
+	}
+
+	.left-column .player {
+		margin-top: 200px;
+	}
+
+	.main {
+		width: 45%;
 	}
 
 	.main canvas {

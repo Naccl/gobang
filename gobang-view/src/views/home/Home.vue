@@ -89,17 +89,17 @@
 				//订阅大厅房间移除消息
 				this.subscribeList.push(this.stompClient.subscribe('/topic/removeRoom', response => {
 					const resp = JSON.parse(response.body)
+					this.roomCount = resp.data.roomCount
 					for (let i in this.roomList) {
-						if (this.roomList[i].owner === resp.data) {
-							this.roomCount--
-							return this.roomList.splice(i, 1)
+						if (this.roomList[i].owner === resp.data.owner) {
+							this.roomList.splice(i, 1)
+							return
 						}
 					}
 				}))
 				//订阅大厅房间更新消息
 				this.subscribeList.push(this.stompClient.subscribe('/topic/updateRoom', response => {
 					const resp = JSON.parse(response.body)
-					console.log(resp)
 					this.roomList.some(room => {
 						if (room.owner === resp.data.owner) {
 							room.owner = resp.data.room.owner
