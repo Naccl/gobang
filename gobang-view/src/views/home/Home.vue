@@ -101,9 +101,7 @@
 				//订阅大厅房间更新消息
 				this.subscribeList.push(this.stompClient.subscribe('/topic/updateRoom', response => {
 					const resp = JSON.parse(response.body)
-					console.log(resp)
 					this.roomList.some(room => {
-						console.log(room)
 						if (room.owner === resp.data.owner) {
 							room.owner = resp.data.room.owner
 							room.player = resp.data.room.player

@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="site">
 		<h2 class="title">五子棋</h2>
 		<div class="container">
 			<div class="left-column">
@@ -46,6 +46,7 @@
 				ownerStatus: '',//房主的状态
 				playerStatus: '',//第二个玩家的状态
 				isReady: false,//我是否已经准备
+				isMe: false,//当前轮到我落子
 
 				margin: 30,//边距
 				gridSpacing: 36,//网格间距
@@ -56,8 +57,6 @@
 				lastStep: null,//最后一个棋子落下时的棋盘状态
 				lastStatus: null,//最后一个棋子被标记后的棋盘状态
 				matrixChessBoard: [],//记录棋盘落子情况
-				pieceColor: ["black", "white"], //棋子颜色
-				step: 0, //记录当前步数
 			}
 		},
 		computed: {
@@ -72,6 +71,9 @@
 		beforeRouteLeave(to, from, next) {
 			this.stompClient.send('/send/exitRoom')
 			this.unsubscribe()
+			this.canvas.removeEventListener('click', e => this.clickEvent(e))
+			this.canvas.removeEventListener('mousemove', e => this.moveEvent(e))
+			this.canvas.removeEventListener('mouseleave', e => this.leaveEvent(e))
 			next()
 		},
 		created() {
@@ -135,8 +137,24 @@
 				//订阅游戏开始消息
 				this.subscribeList.push(this.stompClient.subscribe('/user/topic/start', response => {
 					const resp = JSON.parse(response.body)
-					console.log(resp)
-					//todo 处理游戏开始事件
+					if (resp.data === this.owner) {
+						this.ownerStatus = '黑棋'
+						this.playerStatus = '白棋'
+					} else {
+						this.ownerStatus = '白棋'
+						this.playerStatus = '黑棋'
+					}
+					if (resp.data === this.me) {
+						this.isMe = true
+					} else {
+						this.isMe = false
+					}
+					this.restart()
+				}))
+				//订阅落子消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/setChess', response => {
+					const resp = JSON.parse(response.body)
+					this.setChessHandler(resp.data.x, resp.data.y, resp.data.isBlack)
 				}))
 			},
 			//取消所有订阅
@@ -162,17 +180,13 @@
 				let x = this.getX(e)
 				let y = this.getY(e)
 				if (this.canClick(x, y)) {
-					//恢复棋盘状态（清空预落子红框）
-					this.context.putImageData(this.lastStep, 0, 0)
-					//落子
-					this.drawChess(x, y, this.gridSpacing / 2.1, this.pieceColor[this.step % 2])
-					//保存棋盘状态
-					this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
-					//箭头标记最后一个棋子
-					this.drawLastChess(x, y)
-					this.lastStatus = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
-					this.matrixChessBoard[y][x] = this.pieceColor[this.step % 2]
-					this.step++
+					//发送落子消息
+					const data = {
+						owner: this.owner,
+						x,
+						y
+					}
+					this.stompClient.send('/send/setChess', {}, JSON.stringify(data))
 				}
 			},
 			moveEvent(e) {
@@ -203,6 +217,8 @@
 			drawPreloadingRedFrame(x, y) {
 				const {gridSpacing, context} = this
 				if (this.canClick(x, y)) {
+					//设置鼠标样式
+					this.canvas.style.cursor = 'pointer'
 					//绘制预落子框前，先恢复棋盘状态（清空其它预落子红框）
 					context.putImageData(this.lastStatus, 0, 0)
 					let length = gridSpacing / 4
@@ -228,6 +244,8 @@
 				} else {
 					//不能落子，恢复棋盘状态（清空预落子红框）
 					context.putImageData(this.lastStatus, 0, 0)
+					//设置鼠标样式
+					this.canvas.style.cursor = 'default'
 				}
 			},
 			//画线条
@@ -269,19 +287,14 @@
 				const {margin, gridSpacing} = this
 				return i * gridSpacing + margin
 			},
-			//判断点击位置是否存在棋子
-			isExistChess(x, y) {
-				return this.matrixChessBoard[y][x] ? true : false
-			},
 			//判断点击位置是否可以落子
 			canClick(x, y) {
-				const {rows, cols} = this
-				return x >= 0 && y >= 0 && x < cols && y < rows && !this.isExistChess(x, y)
+				return this.isMe && x >= 0 && y >= 0 && x < this.cols && y < this.rows && !this.matrixChessBoard[y][x]
 			},
 			//绘制棋盘
 			drawBoard() {
 				const {margin, gridSpacing, rows, cols} = this
-				let boardLineColor = '#555'
+				let boardLineColor = '#000'
 				for (let i = 0; i < rows; i++) {
 					this.drawOnePixelLine(margin, margin + i * gridSpacing, margin + (cols - 1) * gridSpacing, margin + i * gridSpacing, boardLineColor)
 				}
@@ -290,7 +303,7 @@
 				}
 				//绘制棋盘上的五个点
 				let radius = gridSpacing / 9
-				let fiveDotColor = '#333'
+				let fiveDotColor = '#000'
 				this.drawDot(Math.floor(cols / 2), Math.floor(rows / 2), radius, fiveDotColor)
 				this.drawDot(3, 3, radius, fiveDotColor)
 				this.drawDot(cols - 4, 3, radius, fiveDotColor)
@@ -316,13 +329,27 @@
 				context.fillStyle = color
 				context.fill()
 			},
+			//棋盘落子处理
+			setChessHandler(x, y, isBlack) {
+				//恢复棋盘状态（清空预落子红框）
+				this.context.putImageData(this.lastStep, 0, 0)
+				//绘制棋子
+				this.drawChess(x, y, this.gridSpacing / 2.1, isBlack)
+				//保存棋盘状态
+				this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
+				//箭头标记最后一个棋子
+				this.drawLastChess(x, y)
+				this.lastStatus = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
+				this.matrixChessBoard[y][x] = isBlack ? 'black' : 'white'
+				this.isMe = !this.isMe
+			},
 			//绘制棋子
-			drawChess(x, y, radius, color) {
+			drawChess(x, y, radius, isBlack) {
 				const {context, gridSpacing} = this
 				let pixelX = this.getPixel(x)
 				let pixelY = this.getPixel(y)
 				let rad = gridSpacing / 4
-				let r0 = color === 'black' ? 20 : 70
+				let r0 = isBlack ? 20 : 70
 				const gradient = context.createRadialGradient(pixelX + rad, pixelY - rad, r0, pixelX + rad, pixelY - rad, 0)
 				gradient.addColorStop(0, '#000')
 				gradient.addColorStop(1, '#fff')
@@ -340,14 +367,19 @@
 				this.drawBoard()
 				this.initMatrixChessBoard()
 				this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
-				this.lastStatus = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
-				this.step = 0
+				this.lastStatus = this.lastStep
 			},
 		}
 	}
 </script>
 
 <style scoped>
+	.site {
+		width: 1300px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
 	.title {
 		text-align: center;
 	}
