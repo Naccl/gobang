@@ -153,6 +153,8 @@ public class GameRoomController {
 				sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
 				sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
 				//todo 处理对局信息、记录分数
+				//初始化对局状态
+				game.init();
 				return;
 			} else if (game.getChessCount() == Game.rows * Game.cols) {
 				//如果棋盘已经下满了，但还没分出胜负，直接平局
@@ -160,10 +162,24 @@ public class GameRoomController {
 				sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
 				sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
 				//todo 处理对局信息、记录分数
+				//初始化对局状态
+				game.init();
 				return;
 			}
 			game.setBlackNow(!game.isBlackNow());
 		}
+	}
+
+	/**
+	 * 判断棋子是否在棋盘边界内
+	 *
+	 * @param x 对应二维数组中的行
+	 * @param y 对应二维数组中的列
+	 * @return
+	 */
+	private boolean judgeBorder(int x, int y) {
+		if (x < 0 || y < 0 || x >= Game.cols || y >= Game.rows) return false;
+		return true;
 	}
 
 	/**
@@ -216,17 +232,5 @@ public class GameRoomController {
 		if (game.getSameColorCount() >= 5) {
 			game.setWin(true);
 		}
-	}
-
-	/**
-	 * 判断棋子是否在棋盘边界内
-	 *
-	 * @param x 对应二维数组中的行
-	 * @param y 对应二维数组中的列
-	 * @return
-	 */
-	private boolean judgeBorder(int x, int y) {
-		if (x < 0 || y < 0 || x >= Game.cols || y >= Game.rows) return false;
-		return true;
 	}
 }
