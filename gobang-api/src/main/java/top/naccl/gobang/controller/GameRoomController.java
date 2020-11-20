@@ -29,6 +29,10 @@ public class GameRoomController {
 	@Autowired
 	private SimpMessageSendingOperations sender;
 	private static final Random random = new Random();
+	//深搜判断胜负用到的八个搜索方向
+	private static final int[] dx = {0, 1, 1, 1, 0, -1, -1, -1};
+	private static final int[] dy = {1, 1, 0, -1, -1, -1, 0, 1};
+	private static final int DEFAULT_DIRECTION = 8;
 
 	/**
 	 * 用户订阅此消息后，将 房间信息 推送给用户
@@ -129,15 +133,36 @@ public class GameRoomController {
 			game.getMatrix()[y][x] = game.isBlackNow() ? 1 : 2;
 			game.getChessArray()[game.getChessCount()] = new Chess(x, y, game.isBlackNow());
 			game.setChessCount(game.getChessCount() + 1);
-			game.setBlackNow(!game.isBlackNow());
-			//todo 判断是否获胜
 			Map<String, Object> map = new HashMap<>();
 			map.put("x", x);
 			map.put("y", y);
-			map.put("isBlack", !game.isBlackNow());
+			map.put("isBlack", game.isBlackNow());
 			//推送落子消息给 房间中的两个玩家
 			sender.convertAndSendToUser(game.getOwner(), "/topic/setChess", Result.ok("", map));
 			sender.convertAndSendToUser(game.getPlayer(), "/topic/setChess", Result.ok("", map));
+			//判断是否获胜
+			isWin(x, y, DEFAULT_DIRECTION, game);
+			if (game.isWin()) {
+				String msg;
+				if (game.isBlackNow()) {
+					msg = "黑棋获胜！";
+				} else {
+					msg = "白棋获胜！";
+				}
+				//推送胜负消息给 房间中的两个玩家
+				sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
+				sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
+				//todo 处理对局信息、记录分数
+				return;
+			} else if (game.getChessCount() == Game.rows * Game.cols) {
+				//如果棋盘已经下满了，但还没分出胜负，直接平局
+				String msg = "平局！";
+				sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
+				sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
+				//todo 处理对局信息、记录分数
+				return;
+			}
+			game.setBlackNow(!game.isBlackNow());
 		}
 	}
 
@@ -146,13 +171,62 @@ public class GameRoomController {
 	 * 1.正在游戏中
 	 * 2.现在轮到黑棋且发来落子消息的是黑棋方 或 现在轮到白棋且发来落子消息的是白棋方
 	 * 3.落子位置不存在棋子
+	 * 4.落子位置没有超出棋盘边界
 	 *
-	 * @param game
+	 * @param game 对局信息
 	 * @return
 	 */
 	private boolean judgeSetChess(Game game, String username, int x, int y) {
 		return game.isPlaying()
 				&& ((game.isBlackNow() && username.equals(game.getBlackRole())) || (!game.isBlackNow() && username.equals(game.getWhiteRole())))
-				&& game.getMatrix()[y][x] == 0;
+				&& game.getMatrix()[y][x] == 0
+				&& judgeBorder(x, y);
+	}
+
+	/**
+	 * 深搜判断是否五连珠
+	 *
+	 * @param x    对应二维数组中的行
+	 * @param y    对应二维数组中的列
+	 * @param d    方向
+	 * @param game 对局信息
+	 */
+	private void isWin(int x, int y, int d, Game game) {
+		if (game.isWin()) {
+			return;
+		}
+		//起始四个方向
+		if (d == DEFAULT_DIRECTION) {
+			for (int i = 0; i < 4; i++) {
+				game.setSameColorCount(1);
+				int nx1 = x + dx[i];
+				int ny1 = y + dy[i];
+				int nx2 = x + dx[i + 4];
+				int ny2 = y + dy[i + 4];
+				if (judgeBorder(nx1, ny1)) isWin(nx1, ny1, i, game);
+				if (judgeBorder(nx2, ny2)) isWin(nx2, ny2, i + 4, game);
+			}
+		} else if ((game.isBlackNow() && game.getMatrix()[y][x] == 1) || (!game.isBlackNow() && game.getMatrix()[y][x] == 2)) {
+			//当前方向下一个位置是否连珠
+			game.setSameColorCount(game.getSameColorCount() + 1);
+			int nx = x + dx[d];
+			int ny = y + dy[d];
+			if (judgeBorder(nx, ny)) isWin(nx, ny, d, game);
+		}
+		if (game.getSameColorCount() >= 5) {
+			game.setWin(true);
+		}
+	}
+
+	/**
+	 * 判断棋子是否在棋盘边界内
+	 *
+	 * @param x 对应二维数组中的行
+	 * @param y 对应二维数组中的列
+	 * @return
+	 */
+	private boolean judgeBorder(int x, int y) {
+		if (x < 0 || y < 0 || x >= Game.cols || y >= Game.rows) return false;
+		return true;
 	}
 }

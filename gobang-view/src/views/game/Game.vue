@@ -156,6 +156,20 @@
 					const resp = JSON.parse(response.body)
 					this.setChessHandler(resp.data.x, resp.data.y, resp.data.isBlack)
 				}))
+				//订阅胜负或平局消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/win', response => {
+					const resp = JSON.parse(response.body)
+					this.$message({
+						showClose: true,
+						message: resp.data,
+						type: 'success',
+						duration: 5000
+					})
+					this.isMe = false
+					this.isReady = false
+					this.ownerStatus = ''
+					this.playerStatus = ''
+				}))
 			},
 			//取消所有订阅
 			unsubscribe() {
@@ -349,7 +363,7 @@
 				let pixelX = this.getPixel(x)
 				let pixelY = this.getPixel(y)
 				let rad = gridSpacing / 4
-				let r0 = isBlack ? 20 : 70
+				let r0 = isBlack ? 20 : 100
 				const gradient = context.createRadialGradient(pixelX + rad, pixelY - rad, r0, pixelX + rad, pixelY - rad, 0)
 				gradient.addColorStop(0, '#000')
 				gradient.addColorStop(1, '#fff')
