@@ -111,7 +111,14 @@
 			},
 			//认输
 			capitulate() {
-
+				this.$confirm('确认要认输吗？', '认输', {
+					confirmButtonText: '认输',
+					cancelButtonText: '取消'
+				}).then(() => {
+					this.stompClient.send("/send/capitulate", {}, this.owner)
+				}).catch(() => {
+					this.msgInfo('取消认输')
+				})
 			},
 			//退出游戏房间
 			exit() {
@@ -196,10 +203,7 @@
 						this.stompClient.send('/send/agreeHeqi', {}, this.owner)
 					}).catch(() => {
 						this.stompClient.send('/send/refuseHeqi', {}, this.owner)
-						this.$message({
-							type: 'info',
-							message: '不同意和棋'
-						})
+						this.msgInfo('不同意和棋')
 					})
 				}))
 				//订阅对方拒绝和棋消息

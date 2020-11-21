@@ -313,4 +313,35 @@ public class GameRoomController {
 			game.setHeqiUsername(null);
 		}
 	}
+
+	/**
+	 * 认输
+	 *
+	 * @param owner     房主用户名
+	 * @param principal 身份标识
+	 */
+	@MessageMapping("/capitulate")
+	public void capitulate(String owner, Principal principal) {
+		String username = principal.getName();
+		Game game = GameManager.get(owner);
+		//1.正在游戏中
+		//2.玩家在此对局中
+		if (game.isPlaying()) {
+			if (username.equals(game.getBlackRole())) {
+				String msg = "黑棋认输，白棋获胜！";
+				sender.convertAndSendToUser(game.getBlackRole(), "/topic/win", Result.ok("", msg));
+				sender.convertAndSendToUser(game.getWhiteRole(), "/topic/win", Result.ok("", msg));
+				//todo 处理对局信息、记录分数
+				//初始化对局状态
+				game.init();
+			} else if (username.equals(game.getWhiteRole())) {
+				String msg = "白棋认输，黑棋获胜！";
+				sender.convertAndSendToUser(game.getBlackRole(), "/topic/win", Result.ok("", msg));
+				sender.convertAndSendToUser(game.getWhiteRole(), "/topic/win", Result.ok("", msg));
+				//todo 处理对局信息、记录分数
+				//初始化对局状态
+				game.init();
+			}
+		}
+	}
 }
