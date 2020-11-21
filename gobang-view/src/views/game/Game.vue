@@ -19,9 +19,9 @@
 				</div>
 				<div class="row">
 					<el-button size="mini" type="primary" @click="ready" :disabled="isReady">准备</el-button>
-					<el-button size="mini" type="primary" @click="retract">悔棋</el-button>
-					<el-button size="mini" type="primary" @click="heqi">和棋</el-button>
-					<el-button size="mini" type="primary" @click="capitulate">认输</el-button>
+					<el-button size="mini" type="primary" @click="retract" :disabled="!isPlaying">悔棋</el-button>
+					<el-button size="mini" type="primary" @click="heqi" :disabled="!isPlaying">和棋</el-button>
+					<el-button size="mini" type="primary" @click="capitulate" :disabled="!isPlaying">认输</el-button>
 					<el-button size="mini" type="primary" @click="exit">退出</el-button>
 				</div>
 			</div>
@@ -33,6 +33,7 @@
 </template>
 
 <script>
+	import {MessageBox} from 'element-ui'
 	import {mapState} from 'vuex'
 
 	export default {
@@ -47,6 +48,8 @@
 				playerStatus: '',//第二个玩家的状态
 				isReady: false,//我是否已经准备
 				isMe: false,//当前轮到我落子
+				isPlaying: false,//游戏是否开始
+				isHeqiWaiting: false,//申请和棋等待中
 
 				margin: 30,//边距
 				gridSpacing: 36,//网格间距
@@ -99,7 +102,12 @@
 			},
 			//和棋
 			heqi() {
-
+				this.stompClient.send("/send/heqi", {}, this.owner)
+				this.isHeqiWaiting = true
+				this.$alert('等待对方同意和棋......', '和棋', {
+					showClose: false,
+					showConfirmButton: false
+				})
 			},
 			//认输
 			capitulate() {
@@ -149,6 +157,7 @@
 					} else {
 						this.isMe = false
 					}
+					this.isPlaying = true
 					this.restart()
 				}))
 				//订阅落子消息
@@ -165,10 +174,40 @@
 						type: 'success',
 						duration: 5000
 					})
+					this.isPlaying = false
 					this.isMe = false
 					this.isReady = false
 					this.ownerStatus = ''
 					this.playerStatus = ''
+					if (this.isHeqiWaiting) {
+						MessageBox.close()
+						this.isHeqiWaiting = false
+					}
+				}))
+				//订阅对方请求和棋消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/heqi', response => {
+					this.$confirm('对方请求和棋，是否同意？', '和棋', {
+						showClose: false,
+						closeOnClickModal: false,
+						closeOnPressEscape: false,
+						confirmButtonText: '同意',
+						cancelButtonText: '不同意'
+					}).then(() => {
+						this.stompClient.send('/send/agreeHeqi', {}, this.owner)
+					}).catch(() => {
+						this.stompClient.send('/send/refuseHeqi', {}, this.owner)
+						this.$message({
+							type: 'info',
+							message: '不同意和棋'
+						})
+					})
+				}))
+				//订阅对方拒绝和棋消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/refuseHeqi', response => {
+					const resp = JSON.parse(response.body)
+					this.msgInfo(resp.data)
+					MessageBox.close()
+					this.isHeqiWaiting = false
 				}))
 			},
 			//取消所有订阅

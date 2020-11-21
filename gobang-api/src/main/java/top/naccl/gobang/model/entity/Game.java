@@ -28,18 +28,22 @@ public class Game {
 	private String blackRole;//黑方
 	private String whiteRole;//白方
 	private boolean isWin = false;//是否决出胜负
+	private String heqiUsername;//申请和棋方用户名
+
 	private int[][] matrix = new int[rows][cols];//棋盘 0空 1黑棋 2白棋
 	private Chess[] chessArray = new Chess[rows * cols];//按顺序记录棋子
 	private int chessCount = 0;//已下棋子个数
 	private boolean isBlackNow = true;//当前棋子颜色
 
 	public void init() {
+		this.sameColorCount = 0;
 		this.isPlaying = false;
 		this.ownerReady = false;
 		this.playerReady = false;
 		this.blackRole = null;
 		this.whiteRole = null;
 		this.isWin = false;
+		this.heqiUsername = null;
 		this.matrix = new int[rows][cols];
 		this.chessArray = new Chess[rows * cols];
 		this.chessCount = 0;

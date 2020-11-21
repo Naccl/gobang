@@ -37,6 +37,7 @@ public class GameRoomController {
 	/**
 	 * 用户订阅此消息后，将 房间信息 推送给用户
 	 *
+	 * @param principal 身份标识
 	 * @return
 	 */
 	@SubscribeMapping("/game")
@@ -55,35 +56,39 @@ public class GameRoomController {
 	/**
 	 * 玩家准备
 	 *
+	 * @param owner     房主用户名
 	 * @param principal 身份标识
 	 */
 	@MessageMapping("/ready")
 	public void ready(String owner, Principal principal) {
 		String username = principal.getName();
 		Game game = GameManager.get(owner);
-		if (game.getOwner().equals(username)) {
-			//当前准备的玩家是房主
-			if (game.isPlayerReady()) {
-				//对手已经准备，直接开始游戏
-				startGame(game);
-				return;
+		//游戏未开始时才可以准备
+		if (!game.isPlaying()) {
+			if (game.getOwner().equals(username)) {
+				//当前准备的玩家是房主
+				if (game.isPlayerReady()) {
+					//对手已经准备，直接开始游戏
+					startGame(game);
+					return;
+				}
+				game.setOwnerReady(true);
+				if (game.getPlayer() != null) {
+					//存在第二个玩家，推送准备消息给对方
+					sender.convertAndSendToUser(game.getPlayer(), "/topic/ready", Result.ok("", game.getOwner()));
+				}
 			}
-			game.setOwnerReady(true);
-			if (game.getPlayer() != null) {
-				//存在第二个玩家，推送准备消息给对方
-				sender.convertAndSendToUser(game.getPlayer(), "/topic/ready", Result.ok("", game.getOwner()));
+			//当前准备的是第二个玩家，校验当前准备的玩家是否为此房间的第二个玩家
+			else if (game.getPlayer() != null && username.equals(game.getPlayer())) {
+				if (game.isOwnerReady()) {
+					//房主已经准备，直接开始游戏
+					startGame(game);
+					return;
+				}
+				game.setPlayerReady(true);
+				//推送准备消息给房主
+				sender.convertAndSendToUser(game.getOwner(), "/topic/ready", Result.ok("", game.getPlayer()));
 			}
-		}
-		//当前准备的是第二个玩家，校验当前准备的玩家是否为此房间的第二个玩家
-		else if (game.getPlayer() != null && username.equals(game.getPlayer())) {
-			if (game.isOwnerReady()) {
-				//房主已经准备，直接开始游戏
-				startGame(game);
-				return;
-			}
-			game.setPlayerReady(true);
-			//推送准备消息给房主
-			sender.convertAndSendToUser(game.getOwner(), "/topic/ready", Result.ok("", game.getPlayer()));
 		}
 	}
 
@@ -189,7 +194,10 @@ public class GameRoomController {
 	 * 3.落子位置不存在棋子
 	 * 4.落子位置没有超出棋盘边界
 	 *
-	 * @param game 对局信息
+	 * @param game     对局信息
+	 * @param username 落子操作用户名
+	 * @param x        对应二维数组中的行
+	 * @param y        对应二维数组中的列
 	 * @return
 	 */
 	private boolean judgeSetChess(Game game, String username, int x, int y) {
@@ -231,6 +239,78 @@ public class GameRoomController {
 		}
 		if (game.getSameColorCount() >= 5) {
 			game.setWin(true);
+		}
+	}
+
+	/**
+	 * 申请和棋
+	 *
+	 * @param owner     房主用户名
+	 * @param principal 身份标识
+	 */
+	@MessageMapping("/heqi")
+	public void heqi(String owner, Principal principal) {
+		String username = principal.getName();
+		Game game = GameManager.get(owner);
+		//正在游戏中
+		if (game.isPlaying()) {
+			//玩家在此对局中
+			if (username.equals(game.getOwner())) {
+				game.setHeqiUsername(username);
+				//向第二玩家发送请求和棋消息
+				sender.convertAndSendToUser(game.getPlayer(), "/topic/heqi", Result.ok(""));
+			} else if (username.equals(game.getPlayer())) {
+				game.setHeqiUsername(username);
+				//向房主发送请求和棋消息
+				sender.convertAndSendToUser(game.getOwner(), "/topic/heqi", Result.ok(""));
+			}
+		}
+	}
+
+	/**
+	 * 同意和棋
+	 *
+	 * @param owner     房主用户名
+	 * @param principal 身份标识
+	 */
+	@MessageMapping("/agreeHeqi")
+	public void agreeHeqi(String owner, Principal principal) {
+		String username = principal.getName();
+		Game game = GameManager.get(owner);
+		//1.正在游戏中
+		//2.玩家在此对局中
+		//3.只能同意对方的和棋请求
+		if (game.isPlaying() &&
+				((username.equals(game.getOwner()) && game.getPlayer().equals(game.getHeqiUsername()))
+						|| (username.equals(game.getPlayer()) && game.getOwner().equals(game.getHeqiUsername())))) {
+			String msg = "双方和棋！";
+			sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
+			sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
+			//todo 处理对局信息、记录分数
+			//初始化对局状态
+			game.init();
+		}
+	}
+
+	/**
+	 * 拒绝和棋
+	 *
+	 * @param owner     房主用户名
+	 * @param principal 身份标识
+	 */
+	@MessageMapping("/refuseHeqi")
+	public void refuseHeqi(String owner, Principal principal) {
+		String username = principal.getName();
+		Game game = GameManager.get(owner);
+		//1.正在游戏中
+		//2.玩家在此对局中
+		//3.只能拒绝对方的和棋请求
+		if (game.isPlaying() &&
+				((username.equals(game.getOwner()) && game.getPlayer().equals(game.getHeqiUsername()))
+						|| (username.equals(game.getPlayer()) && game.getOwner().equals(game.getHeqiUsername())))) {
+			//发送拒绝和棋消息给申请和棋者
+			sender.convertAndSendToUser(game.getHeqiUsername(), "/topic/refuseHeqi", Result.ok("", "对方拒绝和棋"));
+			game.setHeqiUsername(null);
 		}
 	}
 }
