@@ -19,7 +19,7 @@
 				</div>
 				<div class="row">
 					<el-button size="mini" type="primary" @click="ready" :disabled="isReady">准备</el-button>
-					<el-button size="mini" type="primary" @click="retract" :disabled="!isPlaying">悔棋</el-button>
+					<el-button size="mini" type="primary" @click="undo" :disabled="!isPlaying">悔棋</el-button>
 					<el-button size="mini" type="primary" @click="heqi" :disabled="!isPlaying">和棋</el-button>
 					<el-button size="mini" type="primary" @click="capitulate" :disabled="!isPlaying">认输</el-button>
 					<el-button size="mini" type="primary" @click="exit">退出</el-button>
@@ -50,6 +50,7 @@
 				isMe: false,//当前轮到我落子
 				isPlaying: false,//游戏是否开始
 				isHeqiWaiting: false,//申请和棋等待中
+				isUndoWaiting: false,//申请悔棋等待中
 
 				margin: 30,//边距
 				gridSpacing: 36,//网格间距
@@ -97,8 +98,13 @@
 				this.stompClient.send("/send/ready", {}, this.owner)
 			},
 			//悔棋
-			retract() {
-
+			undo() {
+				this.stompClient.send("/send/undo", {}, this.owner)
+				this.isUndoWaiting = true
+				this.$alert('等待对方同意悔棋......', '悔棋', {
+					showClose: false,
+					showConfirmButton: false
+				})
 			},
 			//和棋
 			heqi() {
@@ -212,6 +218,48 @@
 					this.msgInfo(resp.data)
 					MessageBox.close()
 					this.isHeqiWaiting = false
+				}))
+				//订阅对方请求悔棋消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/undo', response => {
+					this.$confirm('对方请求悔棋，是否同意？', '悔棋', {
+						showClose: false,
+						closeOnClickModal: false,
+						closeOnPressEscape: false,
+						confirmButtonText: '同意',
+						cancelButtonText: '不同意'
+					}).then(() => {
+						this.stompClient.send('/send/agreeUndo', {}, this.owner)
+					}).catch(() => {
+						this.stompClient.send('/send/refuseUndo', {}, this.owner)
+						this.msgInfo('不同意悔棋')
+					})
+				}))
+				//订阅对方拒绝悔棋消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/refuseUndo', response => {
+					const resp = JSON.parse(response.body)
+					this.msgInfo(resp.data)
+					MessageBox.close()
+					this.isUndoWaiting = false
+				}))
+				//双方都要订阅同意悔棋消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/agreeUndo', response => {
+					const resp = JSON.parse(response.body)
+					if (this.isUndoWaiting) {
+						MessageBox.close()
+						this.isUndoWaiting = false
+					}
+					if (resp.data.now === this.me) {
+						this.isMe = true
+					} else {
+						this.isMe = false
+					}
+					this.matrixChessBoard = resp.data.matrix
+					this.drawUndoMatrix()
+					this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
+					if (resp.data.lastX) {
+						this.drawLastChess(resp.data.lastY, resp.data.lastX)
+					}
+					this.lastStatus = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
 				}))
 			},
 			//取消所有订阅
@@ -391,20 +439,21 @@
 				//恢复棋盘状态（清空预落子红框）
 				this.context.putImageData(this.lastStep, 0, 0)
 				//绘制棋子
-				this.drawChess(x, y, this.gridSpacing / 2.1, isBlack)
+				this.drawChess(x, y, isBlack)
 				//保存棋盘状态
 				this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
 				//箭头标记最后一个棋子
 				this.drawLastChess(x, y)
 				this.lastStatus = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
-				this.matrixChessBoard[y][x] = isBlack ? 'black' : 'white'
+				this.matrixChessBoard[y][x] = isBlack ? 1 : 2
 				this.isMe = !this.isMe
 			},
 			//绘制棋子
-			drawChess(x, y, radius, isBlack) {
+			drawChess(x, y, isBlack) {
 				const {context, gridSpacing} = this
 				let pixelX = this.getPixel(x)
 				let pixelY = this.getPixel(y)
+				let radius = this.gridSpacing / 2.1
 				let rad = gridSpacing / 4
 				let r0 = isBlack ? 20 : 100
 				const gradient = context.createRadialGradient(pixelX + rad, pixelY - rad, r0, pixelX + rad, pixelY - rad, 0)
@@ -425,6 +474,22 @@
 				this.initMatrixChessBoard()
 				this.lastStep = this.context.getImageData(0, 0, this.canvasWidth, this.canvasHeight)
 				this.lastStatus = this.lastStep
+			},
+			//根据棋盘状态重新绘制（回到悔棋后的状态）
+			drawUndoMatrix() {
+				const {context, matrixChessBoard} = this
+				context.fillStyle = "#FFD577"
+				context.fillRect(0, 0, this.canvasWidth, this.canvasHeight)
+				this.drawBoard()
+				for (let i in matrixChessBoard) {
+					for (let j in matrixChessBoard[i]) {
+						if (matrixChessBoard[i][j] === 1) {
+							this.drawChess(j, i, true)
+						} else if (matrixChessBoard[i][j] === 2) {
+							this.drawChess(j, i, false)
+						}
+					}
+				}
 			},
 		}
 	}

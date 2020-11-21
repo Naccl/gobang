@@ -15,8 +15,8 @@ import lombok.ToString;
 @Setter
 @ToString
 public class Game {
-	public static int rows = 15;//行数
-	public static int cols = 15;//列数
+	public static final int rows = 15;//行数
+	public static final int cols = 15;//列数
 	private int sameColorCount = 0;//记录连珠个数
 
 	private String owner;
@@ -29,6 +29,7 @@ public class Game {
 	private String whiteRole;//白方
 	private boolean isWin = false;//是否决出胜负
 	private String heqiUsername;//申请和棋方用户名
+	private String undoUsername;//申请悔棋方用户名
 
 	private int[][] matrix = new int[rows][cols];//棋盘 0空 1黑棋 2白棋
 	private Chess[] chessArray = new Chess[rows * cols];//按顺序记录棋子
@@ -44,6 +45,7 @@ public class Game {
 		this.whiteRole = null;
 		this.isWin = false;
 		this.heqiUsername = null;
+		this.undoUsername = null;
 		this.matrix = new int[rows][cols];
 		this.chessArray = new Chess[rows * cols];
 		this.chessCount = 0;

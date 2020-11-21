@@ -136,7 +136,7 @@ public class GameRoomController {
 		//判断玩家落子是否合法
 		if (judgeSetChess(game, username, x, y)) {
 			game.getMatrix()[y][x] = game.isBlackNow() ? 1 : 2;
-			game.getChessArray()[game.getChessCount()] = new Chess(x, y, game.isBlackNow());
+			game.getChessArray()[game.getChessCount()] = new Chess(y, x, game.isBlackNow());
 			game.setChessCount(game.getChessCount() + 1);
 			Map<String, Object> map = new HashMap<>();
 			map.put("x", x);
@@ -239,6 +239,121 @@ public class GameRoomController {
 		}
 		if (game.getSameColorCount() >= 5) {
 			game.setWin(true);
+		}
+	}
+
+	/**
+	 * 申请悔棋
+	 *
+	 * @param owner     房主用户名
+	 * @param principal 身份标识
+	 */
+	@MessageMapping("/undo")
+	public void undo(String owner, Principal principal) {
+		String username = principal.getName();
+		Game game = GameManager.get(owner);
+		//正在游戏中
+		if (game.isPlaying()) {
+			//玩家在此对局中
+			if (username.equals(game.getOwner())) {
+				game.setUndoUsername(username);
+				//向第二玩家发送请求悔棋消息
+				sender.convertAndSendToUser(game.getPlayer(), "/topic/undo", Result.ok(""));
+			} else if (username.equals(game.getPlayer())) {
+				game.setUndoUsername(username);
+				//向房主发送请求悔棋消息
+				sender.convertAndSendToUser(game.getOwner(), "/topic/undo", Result.ok(""));
+			}
+		}
+	}
+
+	/**
+	 * 同意悔棋
+	 *
+	 * @param owner     房主用户名
+	 * @param principal 身份标识
+	 */
+	@MessageMapping("/agreeUndo")
+	public void agreeUndo(String owner, Principal principal) {
+		String username = principal.getName();
+		Game game = GameManager.get(owner);
+		//1.正在游戏中
+		//2.玩家在此对局中
+		//3.只能同意对方的悔棋请求
+		if (game.isPlaying() &&
+				((username.equals(game.getOwner()) && game.getPlayer().equals(game.getUndoUsername()))
+						|| (username.equals(game.getPlayer()) && game.getOwner().equals(game.getUndoUsername())))) {
+			//需要回退的棋子数量
+			int count = 0;
+			//现在轮到黑棋
+			if (game.isBlackNow()) {
+				//悔棋者是黑棋 回退两个棋子
+				if (game.getUndoUsername().equals(game.getBlackRole())) {
+					count = 2;
+				}
+				//悔棋者是白棋 回退一个棋子
+				else if (game.getUndoUsername().equals(game.getWhiteRole())) {
+					count = 1;
+				}
+			}
+			//现在轮到白棋
+			else {
+				//悔棋者是黑棋 回退一个棋子
+				if (game.getUndoUsername().equals(game.getBlackRole())) {
+					count = 1;
+				}
+				//悔棋者是白棋 回退两个棋子
+				else if (game.getUndoUsername().equals(game.getWhiteRole())) {
+					count = 2;
+				}
+			}
+			//执行悔棋操作
+			int[][] matrix = game.getMatrix();
+			Chess[] chessArray = game.getChessArray();
+			int chessCount = game.getChessCount();
+			while (count-- > 0 && chessCount > 0) {
+				Chess chess = chessArray[--chessCount];
+				matrix[chess.getX()][chess.getY()] = 0;
+				chessArray[chessCount] = null;
+				game.setChessCount(chessCount);
+				game.setBlackNow(!game.isBlackNow());
+			}
+			//向两个玩家发送 悔棋后棋盘状态和接下来是谁的回合
+			Map<String, Object> map = new HashMap<>();
+			map.put("matrix", matrix);
+			//现在轮到谁的回合
+			String now = game.isBlackNow() ? game.getBlackRole() : game.getWhiteRole();
+			map.put("now", now);
+			//最后一个棋子的坐标
+			if (chessCount > 0) {
+				Chess lastChess = chessArray[chessCount - 1];
+				map.put("lastX", lastChess.getX());
+				map.put("lastY", lastChess.getY());
+			}
+			sender.convertAndSendToUser(game.getOwner(), "/topic/agreeUndo", Result.ok("", map));
+			sender.convertAndSendToUser(game.getPlayer(), "/topic/agreeUndo", Result.ok("", map));
+		}
+	}
+
+	/**
+	 * 拒绝悔棋
+	 *
+	 * @param owner     房主用户名
+	 * @param principal 身份标识
+	 */
+	@MessageMapping("/refuseUndo")
+	public void refuseUndo(String owner, Principal principal) {
+		String username = principal.getName();
+		Game game = GameManager.get(owner);
+		//1.正在游戏中
+		//2.玩家在此对局中
+		//3.只能拒绝对方的悔棋请求
+		if (game.isPlaying() &&
+				((username.equals(game.getOwner()) && game.getPlayer().equals(game.getUndoUsername()))
+						|| (username.equals(game.getPlayer()) && game.getOwner().equals(game.getUndoUsername())))) {
+			//发送拒绝悔棋消息给申请悔棋者
+			sender.convertAndSendToUser(game.getUndoUsername(), "/topic/refuseUndo", Result.ok("", "对方拒绝悔棋"));
+			game.setUndoUsername(null);
 		}
 	}
 
