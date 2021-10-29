@@ -6,12 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
+import top.naccl.gobang.manager.SessionManager;
 import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.Room;
 import top.naccl.gobang.rabbitmq.MQSender;
 import top.naccl.gobang.service.GameLobbyService;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -86,6 +88,79 @@ public class GameLobbyServiceImpl implements GameLobbyService {
         sender.convertAndSendToUser(username, "/topic/createRoom", Result.ok(""));
         //推送此消息给 所有在游戏大厅的用户
         sender.convertAndSend("/topic/createRoom", Result.ok("", room));
+    }
+
+    /**
+     * 用户退出房间
+     *
+     * @param username 用户名
+     */
+    @Override
+    public void exitRoom(String username) {
+        Room room = RoomManager.getRoomByUsername(username);
+        //todo 判断游戏是否进行中
+        if (username.equals(room.getOwner())) {
+            //退出的玩家是房主
+            if (room.getPlayer() == null) {
+                //房间中不存在第二个玩家，直接移除房间并通知大厅所有人
+                RoomManager.remove(username);
+                GameManager.remove(username);
+                Map<String, Object> map = new HashMap<>();
+                map.put("owner", username);
+                //房主退出房间后回到大厅，房间数量可能显示不准确
+                map.put("roomCount", RoomManager.count());
+                sender.convertAndSend("/topic/removeRoom", Result.ok("", map));
+            } else {
+                //房间中存在第二个玩家，转让房主
+                String player = room.getPlayer();
+                Room newRoom = new Room();
+                newRoom.setOwner(player);
+                RoomManager.add(player, newRoom);
+                RoomManager.remove(username);
+                //通知大厅所有人更新房间信息
+                Map<String, Object> map = new HashMap<>();
+                map.put("owner", username);
+                map.put("room", newRoom);
+                sender.convertAndSend("/topic/updateRoom", Result.ok("", map));
+                //游戏对局也做同样的处理
+                Game newGame = new Game();
+                newGame.setOwner(player);
+                GameManager.add(player, newGame);
+                GameManager.remove(username);
+                //todo 告诉第二个玩家 房主已经退出
+            }
+        } else {
+            //退出房间的是第二个玩家，直接退出
+            room.setPlayer(null);
+            Game game = GameManager.get(room.getOwner());
+            game.setPlayer(null);
+            game.setPlayerReady(false);
+            Map<String, Object> map = new HashMap<>();
+            map.put("owner", room.getOwner());
+            map.put("room", room);
+            //通知大厅所有人更新房间信息
+            sender.convertAndSend("/topic/updateRoom", Result.ok("", map));
+            //todo 告诉房主 第二个玩家已经退出
+        }
+    }
+
+    /**
+     * 用户订阅此消息后，将 当前在线人数、房间数、房间列表 推送给用户
+     *
+     */
+    @Override
+    public Map<String,Object> getRoomList() {
+        Map<String, Object> roomList = new HashMap<>();
+        roomList.put("playerCount", SessionManager.count());
+        roomList.put("roomCount", RoomManager.count());
+        roomList.put("roomList", RoomManager.getRoomList());
+        return roomList;
+    }
+
+    @Override
+    public void notifyAllOnlineCount() {
+        int playerCount = SessionManager.count();
+        sender.convertAndSend("/topic/playerCount", Result.ok("", playerCount));
     }
 
 
