@@ -6,6 +6,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
@@ -13,6 +14,7 @@ import top.naccl.gobang.manager.SessionManager;
 import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.Room;
+import top.naccl.gobang.service.GameLobbyService;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -28,6 +30,9 @@ import java.util.Map;
 public class GameLobbyController {
 	@Autowired
 	private SimpMessageSendingOperations sender;
+
+	@Autowired
+	private GameLobbyService gameLobbyService;
 
 	/**
 	 * 用户订阅此消息后，将 当前在线人数、房间数、房间列表 推送给用户
@@ -60,21 +65,7 @@ public class GameLobbyController {
 	@MessageMapping("/createRoom")
 	public void createRoom(Principal principal) {
 		String username = principal.getName();
-		if (RoomManager.isExistUser(username)) {
-			//此用户已经创建或进入了一个房间，不可创建其它房间
-			sender.convertAndSendToUser(username, "/topic/createRoom", Result.refuse("已经进入了一个房间，请先退出房间！"));
-			return;
-		}
-		Room room = new Room();
-		room.setOwner(username);
-		RoomManager.add(username, room);
-		Game game = new Game();
-		game.setOwner(username);
-		GameManager.add(username, game);
-		//推送成功消息给此用户
-		sender.convertAndSendToUser(username, "/topic/createRoom", Result.ok(""));
-		//推送此消息给 所有在游戏大厅的用户
-		sender.convertAndSend("/topic/createRoom", Result.ok("", room));
+		gameLobbyService.createRoom(username);
 	}
 
 	/**
@@ -86,25 +77,7 @@ public class GameLobbyController {
 	@MessageMapping("/enterRoom")
 	public void enterRoom(String owner, Principal principal) {
 		String username = principal.getName();
-		if (RoomManager.isExistUser(username)) {
-			//此用户已经创建或进入了一个房间，不可进入其它房间
-			sender.convertAndSendToUser(username, "/topic/enterRoom", Result.refuse("已经进入了一个房间，请先退出房间！"));
-			return;
-		}
-		Room room = RoomManager.get(owner);
-		if (room.getPlayer() != null) {
-			sender.convertAndSendToUser(username, "/topic/enterRoom", Result.refuse("该房间人数已满！"));
-			return;
-		}
-		room.setPlayer(username);
-		Game game = GameManager.get(owner);
-		game.setPlayer(username);
-		//推送成功消息给此用户
-		sender.convertAndSendToUser(username, "/topic/enterRoom", Result.ok(""));
-		//推送此消息给房主
-		sender.convertAndSendToUser(owner, "/topic/enterRoom", Result.ok("", username));
-		//推送此消息给 所有在游戏大厅的用户
-		sender.convertAndSend("/topic/enterRoom", Result.ok("", room));
+		gameLobbyService.enterRoom(owner, username);
 	}
 
 	/**
@@ -160,5 +133,12 @@ public class GameLobbyController {
 			sender.convertAndSend("/topic/updateRoom", Result.ok("", map));
 			//todo 告诉房主 第二个玩家已经退出
 		}
+	}
+
+	// 加入匹配
+	@MessageMapping("/matching")
+	public void matching(Principal principal) {
+		String username = principal.getName();
+		gameLobbyService.joinMatching(username);
 	}
 }
