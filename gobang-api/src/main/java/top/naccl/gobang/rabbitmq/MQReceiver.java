@@ -12,12 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import top.naccl.gobang.config.MQConfig;
 import top.naccl.gobang.service.GameLobbyService;
-import top.naccl.gobang.util.RabbitmqUtils;
 
 import java.io.IOException;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class MQReceiver {
@@ -36,12 +32,12 @@ public class MQReceiver {
 			// RabbitMQ的ack机制中，第二个参数返回true，表示需要将这条消息投递给其他的消费者重新消费
 			gameLobbyService.createRoom(waitName);
 			gameLobbyService.enterRoom(waitName, username);
-			try {
-				channel.basicAck(deliveryTag, false);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 			waitName = null;
+		}
+		try {
+			channel.basicAck(deliveryTag, false);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }
