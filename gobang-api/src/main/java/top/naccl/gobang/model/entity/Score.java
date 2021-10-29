@@ -17,6 +17,6 @@ import lombok.ToString;
 @ToString
 public class Score {
     private Long id;
-    private Long score;
+    private int score;
     private Long userId;
 }

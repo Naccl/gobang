@@ -9,4 +9,5 @@ import top.naccl.gobang.model.entity.User;
 @Mapper
 @Repository
 public interface ScoreMapper  {
+    Score findScoreByUsername(String username);
 }
