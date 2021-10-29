@@ -14,7 +14,7 @@ public class MQSender {
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
-	public void sent(String username) {
+	public void sent_100(String username) {
 		rabbitTemplate.convertAndSend(MQConfig.TOPIC_EXCHANGE, MQConfig.TOPIC_ROUTINGKEY_100, username);
 	}
 

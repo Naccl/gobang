@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
+import top.naccl.gobang.mapper.ScoreMapper;
 import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.Room;
+import top.naccl.gobang.model.entity.Score;
 import top.naccl.gobang.rabbitmq.MQSender;
 import top.naccl.gobang.service.GameLobbyService;
 
@@ -25,6 +27,9 @@ public class GameLobbyServiceImpl implements GameLobbyService {
 
     @Autowired
     private SimpMessageSendingOperations sender;
+
+    @Autowired
+    private ScoreMapper scoreMapper;
 
     @Autowired
     private MQSender mqSender;
@@ -66,7 +71,11 @@ public class GameLobbyServiceImpl implements GameLobbyService {
 
     @Override
     public void joinMatching(String username) {
-        mqSender.sent(username);
+        int score = scoreMapper.findScoreByUsername(username).getScore();
+        if (score >= 0 && score < 100) {
+            mqSender.sent_100(username);
+        }
+
     }
 
     @Override

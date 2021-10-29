@@ -6,7 +6,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
