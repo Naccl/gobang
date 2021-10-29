@@ -29,4 +29,12 @@ public interface GameInfo {
      * @param game 对局信息
      */
     void isWin(goBang goBang, Game game, Object... op);
+
+    /**
+     * 统计对局信息
+     * @param winName 获胜用户名称
+     * @param loseName 失败用户名称
+     * @param state 对局状态
+     */
+    void gameStatistics(String winName, String loseName, GameState state);
 }

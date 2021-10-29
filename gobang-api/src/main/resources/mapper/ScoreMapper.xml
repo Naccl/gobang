@@ -5,4 +5,9 @@
     <select id="findScoreByUsername" resultType="top.naccl.gobang.model.entity.Score">
         select s.score from score s inner join user u on s.user_id = u.id where u.username = #{username};
     </select>
+
+    <update id="updataScore">
+        update score set score=score+#{score} where id = (select id from user where username = #{username})
+    </update>
+
 </mapper>

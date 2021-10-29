@@ -1,13 +1,16 @@
 package top.naccl.gobang.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.naccl.gobang.basegame.ChessGameOption;
+import top.naccl.gobang.basegame.GameState;
 import top.naccl.gobang.manager.GameManager;
+import top.naccl.gobang.mapper.ScoreMapper;
 import top.naccl.gobang.model.entity.Chess;
 import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.goBang;
-import top.naccl.gobang.basegame.ChessGameOption;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +24,12 @@ import java.util.Random;
 @Slf4j
 @Service
 public class GoBangGameLogicServiceImpl extends ChessGameOption {
+
+    @Autowired
+    private ScoreMapper scoreMapper;
+
+    // 加减分 抽离出来方便修改
+    private final int SCORE = 3;
 
     private static final Random random = new Random();
     //深搜判断胜负用到的八个搜索方向
@@ -73,6 +82,18 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
         }
         if (game.getSameColorCount() >= 5) {
             game.setWin(true);
+        }
+    }
+
+    @Override
+    public void gameStatistics(String winName, String loseName, GameState state) {
+        int type = state.getType();
+        if (type == 0) {
+            // todo 和局
+        } else if (type == 1) {
+            // 有一方赢
+            scoreMapper.updataScore(SCORE, winName);
+            scoreMapper.updataScore(-SCORE, loseName);
         }
     }
 
@@ -139,7 +160,8 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
                 //推送胜负消息给 房间中的两个玩家
                 sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
                 sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
-                //todo 处理对局信息、记录分数
+                // 处理对局信息、记录分数
+                gameStatistics(winName, loseName, GameState.WINORLOSE);
                 //初始化对局状态
                 game.init();
                 return;
@@ -148,7 +170,8 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
                 String msg = "平局！";
                 sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
                 sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
-                //todo 处理对局信息、记录分数
+                // 处理对局信息、记录分数
+                gameStatistics(game.getOwner(), game.getPlayer(), GameState.PEACE);
                 //初始化对局状态
                 game.init();
                 return;

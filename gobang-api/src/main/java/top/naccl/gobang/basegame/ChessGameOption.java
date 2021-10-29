@@ -15,7 +15,7 @@ import java.util.Map;
  * @Description:
  */
 public abstract class ChessGameOption extends SimpMessageSend
-        implements GameOption,GameStateOption,GameInfo {
+        implements GameOption, GameStateOption, GameInfo {
 
     @Override
     public Map<String,Object> game(String username) {
@@ -59,7 +59,8 @@ public abstract class ChessGameOption extends SimpMessageSend
             String msg = "双方和棋！";
             sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
             sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
-            //todo 处理对局信息、记录分数
+            // 处理对局信息、记录分数
+            gameStatistics(game.getOwner(), game.getPlayer(), GameState.PEACE);
             //初始化对局状态
             game.init();
         }
@@ -85,22 +86,28 @@ public abstract class ChessGameOption extends SimpMessageSend
         Game game = GameManager.get(owner);
         //1.正在游戏中
         //2.玩家在此对局中
+        String winName = "";
+        String loseName = "";
         if (game.isPlaying()) {
             if (username.equals(game.getBlackRole())) {
                 String msg = "黑棋认输，白棋获胜！";
+                winName = game.getWhiteRole();
+                loseName = game.getBlackRole();
                 sender.convertAndSendToUser(game.getBlackRole(), "/topic/win", Result.ok("", msg));
                 sender.convertAndSendToUser(game.getWhiteRole(), "/topic/win", Result.ok("", msg));
-                //todo 处理对局信息、记录分数
                 //初始化对局状态
                 game.init();
             } else if (username.equals(game.getWhiteRole())) {
                 String msg = "白棋认输，黑棋获胜！";
+                winName = game.getBlackRole();
+                loseName = game.getWhiteRole();
                 sender.convertAndSendToUser(game.getBlackRole(), "/topic/win", Result.ok("", msg));
                 sender.convertAndSendToUser(game.getWhiteRole(), "/topic/win", Result.ok("", msg));
-                //todo 处理对局信息、记录分数
                 //初始化对局状态
                 game.init();
             }
+            // 处理对局信息、记录分数
+            gameStatistics(winName, loseName, GameState.WINORLOSE);
         }
     }
 

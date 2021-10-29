@@ -8,4 +8,6 @@ import top.naccl.gobang.model.entity.Score;
 @Repository
 public interface ScoreMapper  {
     Score findScoreByUsername(String username);
+
+    void updataScore(int score, String username);
 }

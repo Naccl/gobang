@@ -77,7 +77,7 @@ public class GameLobbyServiceImpl implements GameLobbyService {
     public void joinMatching(String username) {
         int score = scoreMapper.findScoreByUsername(username).getScore();
         redisService.set(username, "1");
-        if (score >= 0 && score < 100) {
+        if (score < 100) {
             mqSender.sent_100(username);
         }
     }
