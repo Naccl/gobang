@@ -103,8 +103,7 @@ public class GameLobbyServiceImpl implements GameLobbyService {
 
     @Override
     public void UnMatching(String username) {
-
-        redisService.set(username, "0");
+        redisService.del(username);
     }
 
     /**

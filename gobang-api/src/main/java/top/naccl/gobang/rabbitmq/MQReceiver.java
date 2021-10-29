@@ -42,8 +42,8 @@ public class MQReceiver {
 				// RabbitMQ的ack机制中，第二个参数返回true，表示需要将这条消息投递给其他的消费者重新消费
 				gameLobbyService.createRoom(waitName);
 				gameLobbyService.enterRoom(waitName, username);
-				redisService.set(waitName, "0");
-				redisService.set(username, "0");
+				redisService.del(waitName);
+				redisService.del(username);
 				waitName = null;
 			}
 		}
