@@ -8,10 +8,8 @@ import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
-import top.naccl.gobang.model.entity.Chess;
-import top.naccl.gobang.model.entity.Game;
-import top.naccl.gobang.model.entity.Result;
-import top.naccl.gobang.model.entity.Room;
+import top.naccl.gobang.model.entity.*;
+import top.naccl.gobang.service.UserService;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -28,6 +26,10 @@ import java.util.Random;
 public class GameRoomController {
 	@Autowired
 	private SimpMessageSendingOperations sender;
+
+	@Autowired
+	private UserService userService;
+
 	private static final Random random = new Random();
 	//深搜判断胜负用到的八个搜索方向
 	private static final int[] dx = {0, 1, 1, 1, 0, -1, -1, -1};
@@ -147,12 +149,18 @@ public class GameRoomController {
 			sender.convertAndSendToUser(game.getPlayer(), "/topic/setChess", Result.ok("", map));
 			//判断是否获胜
 			isWin(x, y, DEFAULT_DIRECTION, game);
+			String winName = null;
+			String loseName = null;
 			if (game.isWin()) {
 				String msg;
 				if (game.isBlackNow()) {
 					msg = "黑棋获胜！";
+					winName = game.getBlackRole();
+					loseName = game.getWhiteRole();
 				} else {
 					msg = "白棋获胜！";
+					winName = game.getWhiteRole();
+					loseName = game.getBlackRole();
 				}
 				//推送胜负消息给 房间中的两个玩家
 				sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));

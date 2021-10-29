@@ -1,5 +1,6 @@
 package top.naccl.gobang.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,5 +25,6 @@ public class User {
 	private String avatar;
 	private String email;
 	private Date createTime;
+	@TableField(exist = false)
 	private String token;
 }
