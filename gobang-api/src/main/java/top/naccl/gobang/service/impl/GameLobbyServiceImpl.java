@@ -10,11 +10,9 @@ import top.naccl.gobang.mapper.ScoreMapper;
 import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.Room;
-import top.naccl.gobang.model.entity.Score;
 import top.naccl.gobang.rabbitmq.MQSender;
+import top.naccl.gobang.redis.RedisService;
 import top.naccl.gobang.service.GameLobbyService;
-
-import java.util.Map;
 
 /**
  * @program: gobang
@@ -24,6 +22,8 @@ import java.util.Map;
  */
 @Service
 public class GameLobbyServiceImpl implements GameLobbyService {
+    @Autowired
+    private RedisService redisService;
 
     @Autowired
     private SimpMessageSendingOperations sender;
@@ -72,10 +72,10 @@ public class GameLobbyServiceImpl implements GameLobbyService {
     @Override
     public void joinMatching(String username) {
         int score = scoreMapper.findScoreByUsername(username).getScore();
+        redisService.set(username, "1");
         if (score >= 0 && score < 100) {
             mqSender.sent_100(username);
         }
-
     }
 
     @Override
@@ -95,6 +95,12 @@ public class GameLobbyServiceImpl implements GameLobbyService {
         sender.convertAndSendToUser(username, "/topic/createRoom", Result.ok(""));
         //推送此消息给 所有在游戏大厅的用户
         sender.convertAndSend("/topic/createRoom", Result.ok("", room));
+    }
+
+    @Override
+    public void UnMatching(String username) {
+
+        redisService.set(username, "0");
     }
 
 

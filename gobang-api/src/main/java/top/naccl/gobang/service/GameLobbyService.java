@@ -6,4 +6,6 @@ public interface GameLobbyService {
     void joinMatching(String username);
 
     void createRoom(String username);
+
+    void UnMatching(String username);
 }

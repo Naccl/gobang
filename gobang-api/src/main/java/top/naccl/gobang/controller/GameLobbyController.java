@@ -140,4 +140,12 @@ public class GameLobbyController {
 		String username = principal.getName();
 		gameLobbyService.joinMatching(username);
 	}
+
+	// 取消匹配
+	@MessageMapping("/unMatching")
+	public void unMatching(Principal principal) {
+		String username = principal.getName();
+		gameLobbyService.UnMatching(username);
+		log.debug("取消匹配: {}", username);
+	}
 }
