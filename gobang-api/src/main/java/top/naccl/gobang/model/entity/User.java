@@ -5,8 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.Date;
-
 /**
  * @Description: 用户实体
  * @Author: Naccl
@@ -20,9 +18,4 @@ public class User {
 	private Long id;
 	private String username;
 	private String password;
-	private String nickname;
-	private String avatar;
-	private String email;
-	private Date createTime;
-	private String token;
 }
