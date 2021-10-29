@@ -1,7 +1,9 @@
 package top.naccl.gobang.service;
 
-import top.naccl.gobang.model.entity.User;
+import top.naccl.gobang.model.dto.LoginInfo;
+
+import java.util.Map;
 
 public interface UserService {
-	User findUserByUsernameAndPassword(String username, String password);
+	Map<String,Object> login(LoginInfo loginInfo);
 }

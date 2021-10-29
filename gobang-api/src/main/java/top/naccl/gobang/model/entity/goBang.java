@@ -1,22 +1,26 @@
 package top.naccl.gobang.model.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 /**
- * @Description: 棋子信息
- * @Author: Naccl
- * @Date: 2020-11-12
+ * @Auther: wAnG
+ * @Date: 2021/10/29 16:08
+ * @Description:
  */
+
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @ToString
-public class Chess extends roundInfo{
-	private int x;
-	private int y;
+public class goBang extends Chess{
+
+    /**
+     * 是否为黑棋
+     */
+    private boolean isBlack;
+
+
 }
