@@ -1,12 +1,9 @@
 package top.naccl.gobang.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.Date;
 
 /**
  * @Description: 用户实体
@@ -21,10 +18,4 @@ public class User {
 	private Long id;
 	private String username;
 	private String password;
-	private String nickname;
-	private String avatar;
-	private String email;
-	private Date createTime;
-	@TableField(exist = false)
-	private String token;
 }

@@ -1,9 +1,6 @@
 package top.naccl.gobang.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
-import top.naccl.gobang.mapper.ScoreMapper;
-import top.naccl.gobang.model.entity.Score;
 import top.naccl.gobang.service.ScoreService;
 
 /**
