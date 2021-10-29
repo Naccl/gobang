@@ -31,18 +31,21 @@ public class MQReceiver {
 	@RabbitListener(queues = MQConfig.TOPIC_QUEUE_100, ackMode = "MANUAL")
 	public void receive(String username, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, Channel channel) {
 		log.info("receive message: {}", username);
-		// 如果匹配不到，取消了，就将第一次进入队列的用户置空并且消息不处理直接ack
-		if (!StringUtils.isEmpty(waitName) && redisService.get(waitName).equals("0")) {
-			waitName = null;
-		} else if (StringUtils.isEmpty(waitName)) {
-			waitName = username;
-		} else {
-			// RabbitMQ的ack机制中，第二个参数返回true，表示需要将这条消息投递给其他的消费者重新消费
-			gameLobbyService.createRoom(waitName);
-			gameLobbyService.enterRoom(waitName, username);
-			redisService.set(waitName, "0");
-			redisService.set(username, "0");
-			waitName = null;
+		if (!redisService.get(username).equals("0")) {
+			//如果用户没有取消匹配
+			// 如果匹配不到，取消了，就将第一次进入队列的用户置空并且消息不处理直接ack
+			if (!StringUtils.isEmpty(waitName) && redisService.get(waitName).equals("0")) {
+				waitName = null;
+			} else if (StringUtils.isEmpty(waitName)) {
+				waitName = username;
+			} else {
+				// RabbitMQ的ack机制中，第二个参数返回true，表示需要将这条消息投递给其他的消费者重新消费
+				gameLobbyService.createRoom(waitName);
+				gameLobbyService.enterRoom(waitName, username);
+				redisService.set(waitName, "0");
+				redisService.set(username, "0");
+				waitName = null;
+			}
 		}
 		try {
 			channel.basicAck(deliveryTag, false);
