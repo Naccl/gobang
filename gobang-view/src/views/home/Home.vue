@@ -5,6 +5,7 @@
 		<p>当前房间个数: {{ roomCount }}</p>
 		<el-button type="primary" size="mini" @click="connect">重新连接</el-button>
 		<el-button type="primary" size="mini" @click="createRoom">创建房间</el-button>
+		<el-button type="primary" size="mini" @click="match">{{ matchText }}</el-button>
 		<ul class="room-list">
 			<li class="room" v-for="(room,index) in roomList" :key="index">
 				<span class="user">{{ room.owner }}</span>
@@ -28,11 +29,24 @@
 				subscribeList: [],
 				playerCount: 0,
 				roomCount: 0,
-				roomList: []
+				roomList: [],
+				matching: false,
+				matchText: '自动匹配',
+				matchingInterval: null,
 			}
 		},
 		computed: {
 			...mapState(['stompClient'])
+		},
+		watch: {
+			matching(newValue) {
+				if (newValue) {
+					this.setMatchingInterval()
+				} else {
+					this.matchText = '自动匹配'
+					clearInterval(this.matchingInterval)
+				}
+			}
 		},
 		created() {
 			this.connect()
@@ -138,6 +152,23 @@
 			},
 			createRoom() {
 				this.stompClient.send("/send/createRoom")
+			},
+			match() {
+				if (this.matching) {
+					//TODO 取消匹配接口
+					this.matching = false
+				} else {
+					this.stompClient.send("/send/matching")
+					this.matching = true
+				}
+			},
+			setMatchingInterval() {
+				let matchingTime = 0
+				this.matchText = '取消匹配 已匹配:0s'
+				this.matchingInterval = setInterval(() => {
+					matchingTime += 1
+					this.matchText = '取消匹配 已匹配:' + matchingTime + 's'
+				}, 1000);
 			},
 			enterRoom(owner) {
 				this.stompClient.send("/send/enterRoom", {}, owner)
