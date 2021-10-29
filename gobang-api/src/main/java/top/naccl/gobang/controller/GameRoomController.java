@@ -10,7 +10,6 @@ import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
 import top.naccl.gobang.model.entity.*;
 import top.naccl.gobang.service.UserService;
-
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
