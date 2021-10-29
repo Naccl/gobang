@@ -14,6 +14,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+//todo 这个类应该再抽象一下，或者抽出一个父类。留给后面其他棋种的拓展性
 public class Game {
 	public static final int rows = 15;//行数
 	public static final int cols = 15;//列数
@@ -32,7 +33,7 @@ public class Game {
 	private String undoUsername;//申请悔棋方用户名
 
 	private int[][] matrix = new int[rows][cols];//棋盘 0空 1黑棋 2白棋
-	private Chess[] chessArray = new Chess[rows * cols];//按顺序记录棋子
+	private goBang[] chessArray = new goBang[rows * cols];//按顺序记录棋子
 	private int chessCount = 0;//已下棋子个数
 	private boolean isBlackNow = true;//当前棋子颜色
 
@@ -47,7 +48,7 @@ public class Game {
 		this.heqiUsername = null;
 		this.undoUsername = null;
 		this.matrix = new int[rows][cols];
-		this.chessArray = new Chess[rows * cols];
+		this.chessArray = new goBang[rows * cols];
 		this.chessCount = 0;
 		this.isBlackNow = true;
 	}
