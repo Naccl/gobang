@@ -73,12 +73,27 @@
 			}
 		},
 		beforeRouteLeave(to, from, next) {
-			this.stompClient.send('/send/exitRoom')
-			this.unsubscribe()
-			this.canvas.removeEventListener('click', e => this.clickEvent(e))
-			this.canvas.removeEventListener('mousemove', e => this.moveEvent(e))
-			this.canvas.removeEventListener('mouseleave', e => this.leaveEvent(e))
-			next()
+			if (this.isPlaying) {
+				this.$confirm('游戏已经开始，确认要退出吗？', '退出', {
+					confirmButtonText: '退出',
+					cancelButtonText: '取消'
+				}).then(() => {
+					this.stompClient.send('/send/exitRoom')
+					this.unsubscribe()
+					this.canvas.removeEventListener('click', e => this.clickEvent(e))
+					this.canvas.removeEventListener('mousemove', e => this.moveEvent(e))
+					this.canvas.removeEventListener('mouseleave', e => this.leaveEvent(e))
+					next()
+				}).catch(() => {
+				})
+			} else {
+				this.stompClient.send('/send/exitRoom')
+				this.unsubscribe()
+				this.canvas.removeEventListener('click', e => this.clickEvent(e))
+				this.canvas.removeEventListener('mousemove', e => this.moveEvent(e))
+				this.canvas.removeEventListener('mouseleave', e => this.leaveEvent(e))
+				next()
+			}
 		},
 		created() {
 			this.initSubscribe()

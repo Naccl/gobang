@@ -17,7 +17,7 @@
             <maxHistory>365</maxHistory>
             <!--Spring Boot默认情况下，日志文件10M时，会切分日志文件-->
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>5MB</maxFileSize>
+                <maxFileSize>10MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
