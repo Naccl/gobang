@@ -1,5 +1,6 @@
 package top.naccl.gobang.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.naccl.gobang.exception.UsernameNotFoundException;
