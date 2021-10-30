@@ -13,14 +13,14 @@ public interface GameOption {
      * 玩家落子
      *
      * @param username 身份标识
-     * @param chess     棋子坐标信息
+     * @param chess    棋子坐标信息
      */
     void setChess(String username, Chess chess);
 
     /**
      * 申请悔棋
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void undo(String owner, String username);
@@ -28,7 +28,7 @@ public interface GameOption {
     /**
      * 同意悔棋
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void agreeUndo(String owner, String username);
@@ -36,7 +36,7 @@ public interface GameOption {
     /**
      * 拒绝悔棋
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void refuseUndo(String owner, String username);
@@ -44,7 +44,7 @@ public interface GameOption {
     /**
      * 申请和棋
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void heqi(String owner, String username);
@@ -52,7 +52,7 @@ public interface GameOption {
     /**
      * 同意和棋
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void agreeHeqi(String owner, String username);
@@ -60,7 +60,7 @@ public interface GameOption {
     /**
      * 拒绝和棋
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void refuseHeqi(String owner, String username);
@@ -68,7 +68,7 @@ public interface GameOption {
     /**
      * 认输
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void capitulate(String owner, String username);

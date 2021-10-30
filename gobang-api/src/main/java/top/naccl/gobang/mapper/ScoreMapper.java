@@ -9,5 +9,5 @@ import top.naccl.gobang.model.entity.Score;
 public interface ScoreMapper  {
     Score findScoreByUsername(String username);
 
-    void updataScore(int score, String username);
+    void updateScore(int score, String username);
 }

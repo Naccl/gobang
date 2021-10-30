@@ -93,8 +93,8 @@ public class GobangGameLogicServiceImpl extends ChessGameOption {
                 break;
             case WINORLOSE:
                 // 有一方赢
-                scoreMapper.updataScore(SCORE, winName);
-                scoreMapper.updataScore(-SCORE, loseName);
+                scoreMapper.updateScore(SCORE, winName);
+                scoreMapper.updateScore(-SCORE, loseName);
                 break;
         }
     }

@@ -1,6 +1,8 @@
 package top.naccl.gobang.basegame;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 
 /**
@@ -8,9 +10,12 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
  * @Date: 2021/10/29 17:06
  * @Description:
  */
-public abstract class SimpMessageSend {
+public abstract class SimpMessageSend implements BeanFactoryAware {
 
-    @Autowired
     protected SimpMessageSendingOperations sender;
 
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.sender = beanFactory.getBean(SimpMessageSendingOperations.class);
+    }
 }

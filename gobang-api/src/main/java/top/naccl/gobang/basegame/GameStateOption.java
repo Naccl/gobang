@@ -13,7 +13,7 @@ public interface GameStateOption {
     /**
      * 玩家准备
      *
-     * @param owner     房主用户名
+     * @param owner    房主用户名
      * @param username 身份标识
      */
     void ready(String owner, String username);
