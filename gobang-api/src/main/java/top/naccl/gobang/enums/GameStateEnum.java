@@ -1,14 +1,14 @@
 package top.naccl.gobang.enums;
 
 public enum GameStateEnum {
-    PEACE(0), // 和棋
-    WINORLOSE(1), // 赢输
-    ING(2), // 正在进行的棋局
-    FREE(3); // 空闲的棋局
+    PEACE("平局",0), // 和棋
+    WINORLOSE("赢输",1), // 赢输
+    ING("正在进行的棋局",2), // 正在进行的棋局
+    FREE("空闲的棋局",3); // 空闲的棋局
 
-    private int state;
+    private final int state;
 
-    GameStateEnum(int state) {
+    private GameStateEnum(String stateName,int state) {
         this.state = state;
     }
 

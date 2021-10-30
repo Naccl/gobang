@@ -87,13 +87,15 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
 
     @Override
     public void gameStatistics(String winName, String loseName, GameStateEnum state) {
-        int type = state.getType();
-        if (type == 0) {
-            // todo 和局
-        } else if (type == 1) {
-            // 有一方赢
-            scoreMapper.updataScore(SCORE, winName);
-            scoreMapper.updataScore(-SCORE, loseName);
+        switch (state) {
+            case PEACE:
+                // todo 和局
+                break;
+            case WINORLOSE:
+                // 有一方赢
+                scoreMapper.updataScore(SCORE, winName);
+                scoreMapper.updataScore(-SCORE, loseName);
+                break;
         }
     }
 
