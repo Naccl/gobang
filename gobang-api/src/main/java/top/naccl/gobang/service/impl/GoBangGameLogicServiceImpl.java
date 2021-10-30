@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.naccl.gobang.basegame.ChessGameOption;
+import top.naccl.gobang.enums.GameScoreEnum;
 import top.naccl.gobang.enums.GameStateEnum;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.mapper.ScoreMapper;
@@ -28,8 +29,7 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
     @Autowired
     private ScoreMapper scoreMapper;
 
-    // 加减分 抽离出来方便修改
-    private static final int SCORE = 3;
+    private static final int SCORE = GameScoreEnum.Gobang.getScore();
 
     private static final Random random = new Random();
     //深搜判断胜负用到的八个搜索方向
