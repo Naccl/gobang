@@ -1,6 +1,6 @@
-package top.naccl.gobang.basegame;
+package top.naccl.gobang.enums;
 
-public enum GameState {
+public enum GameStateEnum {
     PEACE(0), // 和棋
     WINORLOSE(1), // 赢输
     ING(2), // 正在进行的棋局
@@ -8,7 +8,7 @@ public enum GameState {
 
     private int state;
 
-    GameState(int state) {
+    GameStateEnum(int state) {
         this.state = state;
     }
 

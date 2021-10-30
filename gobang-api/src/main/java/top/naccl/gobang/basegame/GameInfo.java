@@ -1,5 +1,6 @@
 package top.naccl.gobang.basegame;
 
+import top.naccl.gobang.enums.GameStateEnum;
 import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.goBang;
 
@@ -36,5 +37,5 @@ public interface GameInfo {
      * @param loseName 失败用户名称
      * @param state 对局状态
      */
-    void gameStatistics(String winName, String loseName, GameState state);
+    void gameStatistics(String winName, String loseName, GameStateEnum state);
 }

@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.naccl.gobang.basegame.ChessGameOption;
-import top.naccl.gobang.basegame.GameState;
+import top.naccl.gobang.enums.GameStateEnum;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.mapper.ScoreMapper;
 import top.naccl.gobang.model.entity.Chess;
@@ -29,7 +29,7 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
     private ScoreMapper scoreMapper;
 
     // 加减分 抽离出来方便修改
-    private final int SCORE = 3;
+    private static final int SCORE = 3;
 
     private static final Random random = new Random();
     //深搜判断胜负用到的八个搜索方向
@@ -86,7 +86,7 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
     }
 
     @Override
-    public void gameStatistics(String winName, String loseName, GameState state) {
+    public void gameStatistics(String winName, String loseName, GameStateEnum state) {
         int type = state.getType();
         if (type == 0) {
             // todo 和局
@@ -161,7 +161,7 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
                 sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
                 sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
                 // 处理对局信息、记录分数
-                gameStatistics(winName, loseName, GameState.WINORLOSE);
+                gameStatistics(winName, loseName, GameStateEnum.WINORLOSE);
                 //初始化对局状态
                 game.init();
                 return;
@@ -171,7 +171,7 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
                 sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
                 sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
                 // 处理对局信息、记录分数
-                gameStatistics(game.getOwner(), game.getPlayer(), GameState.PEACE);
+                gameStatistics(game.getOwner(), game.getPlayer(), GameStateEnum.PEACE);
                 //初始化对局状态
                 game.init();
                 return;

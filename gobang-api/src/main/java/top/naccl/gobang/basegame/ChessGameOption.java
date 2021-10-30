@@ -1,5 +1,6 @@
 package top.naccl.gobang.basegame;
 
+import top.naccl.gobang.enums.GameStateEnum;
 import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.manager.RoomManager;
 import top.naccl.gobang.model.entity.Game;
@@ -60,7 +61,7 @@ public abstract class ChessGameOption extends SimpMessageSend
             sender.convertAndSendToUser(game.getOwner(), "/topic/win", Result.ok("", msg));
             sender.convertAndSendToUser(game.getPlayer(), "/topic/win", Result.ok("", msg));
             // 处理对局信息、记录分数
-            gameStatistics(game.getOwner(), game.getPlayer(), GameState.PEACE);
+            gameStatistics(game.getOwner(), game.getPlayer(), GameStateEnum.PEACE);
             //初始化对局状态
             game.init();
         }
@@ -107,7 +108,7 @@ public abstract class ChessGameOption extends SimpMessageSend
                 game.init();
             }
             // 处理对局信息、记录分数
-            gameStatistics(winName, loseName, GameState.WINORLOSE);
+            gameStatistics(winName, loseName, GameStateEnum.WINORLOSE);
         }
     }
 
