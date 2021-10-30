@@ -2,19 +2,16 @@ package top.naccl.gobang.util;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import io.jsonwebtoken.lang.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.ChannelCallback;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import top.naccl.gobang.rabbitmq.MQReceiver;
 
 import java.util.Objects;
 
 /**
- * @program: gobang
+ * @program: Gobang
  * @author: ChenJin
  * @create: 2021-10-29 10:18
  * @description: TODO

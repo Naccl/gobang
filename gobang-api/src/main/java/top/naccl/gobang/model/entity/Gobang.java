@@ -15,7 +15,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class goBang extends Chess{
+public class Gobang extends Chess{
 
     /**
      * 是否为黑棋

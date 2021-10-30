@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import top.naccl.gobang.service.ScoreService;
 
 /**
- * @program: gobang
+ * @program: Gobang
  * @author: ChenJin
  * @create: 2021-10-28 15:48
  * @description: TODO

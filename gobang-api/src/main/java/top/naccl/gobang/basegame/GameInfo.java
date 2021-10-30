@@ -2,7 +2,7 @@ package top.naccl.gobang.basegame;
 
 import top.naccl.gobang.enums.GameStateEnum;
 import top.naccl.gobang.model.entity.Game;
-import top.naccl.gobang.model.entity.goBang;
+import top.naccl.gobang.model.entity.Gobang;
 
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public interface GameInfo {
      * @param op 存储对应的操作信息，这里存储的是判断连珠方向
      * @param game 对局信息
      */
-    void isWin(goBang goBang, Game game, Object... op);
+    void isWin(Gobang gobang, Game game, Object... op);
 
     /**
      * 统计对局信息

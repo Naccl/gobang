@@ -33,7 +33,7 @@ public class Game {
 	private String undoUsername;//申请悔棋方用户名
 
 	private int[][] matrix = new int[rows][cols];//棋盘 0空 1黑棋 2白棋
-	private goBang[] chessArray = new goBang[rows * cols];//按顺序记录棋子
+	private Gobang[] chessArray = new Gobang[rows * cols];//按顺序记录棋子
 	private int chessCount = 0;//已下棋子个数
 	private boolean isBlackNow = true;//当前棋子颜色
 
@@ -48,7 +48,7 @@ public class Game {
 		this.heqiUsername = null;
 		this.undoUsername = null;
 		this.matrix = new int[rows][cols];
-		this.chessArray = new goBang[rows * cols];
+		this.chessArray = new Gobang[rows * cols];
 		this.chessCount = 0;
 		this.isBlackNow = true;
 	}

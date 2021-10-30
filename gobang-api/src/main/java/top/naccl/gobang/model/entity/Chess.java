@@ -16,7 +16,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class Chess extends roundInfo{
+public class Chess extends RoundInfo {
 	private int x;
 	private int y;
 }

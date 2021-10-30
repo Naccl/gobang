@@ -13,7 +13,7 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-public class roundInfo {
+public class RoundInfo {
 
     /**
      * 房主信息

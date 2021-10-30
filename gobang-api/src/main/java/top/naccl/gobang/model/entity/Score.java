@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * @program: gobang
+ * @program: Gobang
  * @author: ChenJin
  * @create: 2021-10-28 15:41
  * @description: TODO

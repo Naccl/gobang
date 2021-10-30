@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import top.naccl.gobang.rabbitmq.MQSender;
 
 /**
- * @program: gobang
+ * @program: Gobang
  * @author: ChenJin
  * @create: 2021-10-29 10:04
  * @description: TODO

@@ -3,7 +3,7 @@ package top.naccl.gobang.model.dto;
 import lombok.*;
 
 /**
- * @program: gobang
+ * @program: Gobang
  * @author: ChenJin
  * @create: 2021-10-29 08:50
  * @description: 通知用户

@@ -10,8 +10,8 @@ import top.naccl.gobang.manager.GameManager;
 import top.naccl.gobang.mapper.ScoreMapper;
 import top.naccl.gobang.model.entity.Chess;
 import top.naccl.gobang.model.entity.Game;
+import top.naccl.gobang.model.entity.Gobang;
 import top.naccl.gobang.model.entity.Result;
-import top.naccl.gobang.model.entity.goBang;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ import java.util.Random;
  */
 @Slf4j
 @Service
-public class GoBangGameLogicServiceImpl extends ChessGameOption {
+public class GobangGameLogicServiceImpl extends ChessGameOption {
 
     @Autowired
     private ScoreMapper scoreMapper;
@@ -53,10 +53,10 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
     }
 
     @Override
-    public void isWin(goBang goBang, Game game, Object... op) {
+    public void isWin(Gobang gobang, Game game, Object... op) {
         int direction = (int)op[0];
-        int x = goBang.getX();
-        int y = goBang.getY();
+        int x = gobang.getX();
+        int y = gobang.getY();
         if (game.isWin()) {
             return;
         }
@@ -68,17 +68,17 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
                 int ny1 = y + dy[i];
                 int nx2 = x + dx[i + 4];
                 int ny2 = y + dy[i + 4];
-                goBang goBang1 = buildGoBang(nx1, ny1);
-                goBang goBang2 = buildGoBang(nx2, ny2);
-                if (judgeBorder(nx1, ny1)) isWin(goBang1,game, i);
-                if (judgeBorder(nx2, ny2)) isWin(goBang2,game, i + 4);
+                Gobang gobang1 = buildGobang(nx1, ny1);
+                Gobang gobang2 = buildGobang(nx2, ny2);
+                if (judgeBorder(nx1, ny1)) isWin(gobang1,game, i);
+                if (judgeBorder(nx2, ny2)) isWin(gobang2,game, i + 4);
             }
         } else if ((game.isBlackNow() && game.getMatrix()[y][x] == 1) || (!game.isBlackNow() && game.getMatrix()[y][x] == 2)) {
             //当前方向下一个位置是否连珠
             game.setSameColorCount(game.getSameColorCount() + 1);
             int nx = x + dx[direction];
             int ny = y + dy[direction];
-            if (judgeBorder(nx, ny)) isWin(buildGoBang(nx,ny), game,direction);
+            if (judgeBorder(nx, ny)) isWin(buildGobang(nx,ny), game,direction);
         }
         if (game.getSameColorCount() >= 5) {
             game.setWin(true);
@@ -111,30 +111,30 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
         return true;
     }
 
-    private goBang buildGoBang(int x,int y){
-        goBang goBang = new goBang();
-        goBang.setX(x);
-        goBang.setY(y);
-        return goBang;
+    private Gobang buildGobang(int x, int y){
+        Gobang gobang = new Gobang();
+        gobang.setX(x);
+        gobang.setY(y);
+        return gobang;
     }
 
     @Override
     public void setChess(String username, Chess chess) {
         /*
          * 		todo 手动把Map映射进入goBang,后期前端应该直接映射进参数
-         * 		public void setChess(Principal principal, goBang goBang)
+         * 		public void setChess(Principal principal, Gobang Gobang)
          */
-        goBang goBang = (goBang) chess;
-        int x = goBang.getX();
-        int y = goBang.getY();
-        String owner = goBang.getOwner();
+        Gobang gobang = (Gobang) chess;
+        int x = gobang.getX();
+        int y = gobang.getY();
+        String owner = gobang.getOwner();
         Game game = GameManager.get(owner);
-        goBang.setUserName(username);
+        gobang.setUserName(username);
         //判断玩家落子是否合法
-        if (judgeSetChess(game,goBang)) {
+        if (judgeSetChess(game,gobang)) {
             game.getMatrix()[y][x] = game.isBlackNow() ? 1 : 2;
             // todo 这部分逻辑可以使用Arraylist开辟rows*cols大小进行add
-            game.getChessArray()[game.getChessCount()] = goBang;
+            game.getChessArray()[game.getChessCount()] = gobang;
             game.setChessCount(game.getChessCount() + 1);
             // todo 返回前端的数据暂未修改，先不进行改动。后期应该改为goBang
             Map<String, Object> map = new HashMap<>();
@@ -145,7 +145,7 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
             sender.convertAndSendToUser(game.getOwner(), "/topic/setChess", Result.ok("", map));
             sender.convertAndSendToUser(game.getPlayer(), "/topic/setChess", Result.ok("", map));
             //判断是否获胜
-            isWin(goBang, game, DEFAULT_DIRECTION);
+            isWin(gobang, game, DEFAULT_DIRECTION);
             String winName = null;
             String loseName = null;
             if (game.isWin()) {
@@ -194,11 +194,11 @@ public class GoBangGameLogicServiceImpl extends ChessGameOption {
      *  	  x        对应二维数组中的行
      * 	 	  y        对应二维数组中的列
      */
-    private boolean judgeSetChess(Game game, goBang goBang) {
-        int x = goBang.getX();
-        int y = goBang.getY();
+    private boolean judgeSetChess(Game game, Gobang gobang) {
+        int x = gobang.getX();
+        int y = gobang.getY();
         return game.isPlaying()
-                && ((game.isBlackNow() && goBang.getUserName().equals(game.getBlackRole())) || (!game.isBlackNow() && goBang.getUserName().equals(game.getWhiteRole())))
+                && ((game.isBlackNow() && gobang.getUserName().equals(game.getBlackRole())) || (!game.isBlackNow() && gobang.getUserName().equals(game.getWhiteRole())))
                 && game.getMatrix()[y][x] == 0
                 && judgeBorder(x, y);
     }

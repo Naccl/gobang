@@ -6,14 +6,10 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.naccl.gobang.model.entity.Game;
+import top.naccl.gobang.model.entity.Gobang;
 import top.naccl.gobang.model.entity.Result;
-import top.naccl.gobang.model.entity.goBang;
-import top.naccl.gobang.service.impl.GoBangGameLogicServiceImpl;
+import top.naccl.gobang.service.impl.GobangGameLogicServiceImpl;
 
-import top.naccl.gobang.manager.GameManager;
-import top.naccl.gobang.manager.RoomManager;
-import top.naccl.gobang.model.entity.*;
-import top.naccl.gobang.service.UserService;
 import java.security.Principal;
 import java.util.Map;
 
@@ -27,7 +23,7 @@ import java.util.Map;
 public class GameRoomController {
 
 	@Autowired
-	private GoBangGameLogicServiceImpl goBangGameLogicService;
+	private GobangGameLogicServiceImpl goBangGameLogicService;
 
 	/**
 	 * 用户订阅此消息后，将 房间信息 推送给用户
@@ -74,9 +70,9 @@ public class GameRoomController {
 		String username = principal.getName();
 		/*
 		 * 		todo 手动把Map映射进入goBang,后期前端应该直接映射进参数
-		 * 		public void setChess(Principal principal, goBang goBang)
+		 * 		public void setChess(Principal principal, Gobang Gobang)
 		 */
-		goBang goBang = new goBang();
+		Gobang goBang = new Gobang();
 		goBang.setOwner((String) data.get("owner"));
 		goBang.setX((Integer) data.get("x"));
 		goBang.setY((Integer) data.get("y"));
