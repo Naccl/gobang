@@ -21,39 +21,4 @@ public class TestController {
         return "1";
     }
 
-    public static void main(String[] args) {
-        aa aa = new aa();
-    }
-}
-
-
-interface a{
-    void d();
-}
-
-
-interface b extends a{
-    void c();
-}
-
-
-class aa implements a{
-    @Override
-    public void d() {
-        System.out.println("aa");
-    }
-}
-
-
-class dd implements b{
-
-    @Override
-    public void d() {
-        System.out.println("AAA");
-    }
-
-    @Override
-    public void c() {
-        System.out.println("bb");
-    }
 }
