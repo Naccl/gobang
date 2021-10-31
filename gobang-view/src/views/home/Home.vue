@@ -142,6 +142,15 @@
 						this.msgError(resp.msg)
 					}
 				}))
+				//订阅自己取消匹配成功消息
+				this.subscribeList.push(this.stompClient.subscribe('/user/topic/unMatchingSuccess', response => {
+					const resp = JSON.parse(response.body)
+					if (resp.code === 200) {
+						this.matching = false
+					} else {
+						this.msgError(resp.msg)
+					}
+				}))
 			},
 			//取消所有订阅
 			unsubscribe() {
@@ -155,8 +164,7 @@
 			},
 			match() {
 				if (this.matching) {
-					//TODO 取消匹配接口
-					this.matching = false
+					this.stompClient.send("/send/unMatching")
 				} else {
 					this.stompClient.send("/send/matching")
 					this.matching = true

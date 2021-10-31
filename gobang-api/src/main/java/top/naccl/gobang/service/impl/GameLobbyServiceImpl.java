@@ -104,6 +104,8 @@ public class GameLobbyServiceImpl implements GameLobbyService {
     @Override
     public void UnMatching(String username) {
         redisService.del(username);
+        //推送取消成功消息给此用户
+        sender.convertAndSendToUser(username, "/topic/unMatchingSuccess", Result.ok(""));
     }
 
     /**
