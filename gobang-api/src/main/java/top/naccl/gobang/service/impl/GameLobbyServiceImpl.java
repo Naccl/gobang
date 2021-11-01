@@ -119,6 +119,10 @@ public class GameLobbyServiceImpl implements GameLobbyService {
     @Override
     public void exitRoom(String username) {
         Room room = RoomManager.getRoomByUsername(username);
+        if (room == null) {
+            // 说明没在房间连接断开情况
+            return;
+        }
         //todo 判断游戏是否进行中
         if (username.equals(room.getOwner())) {
             //退出的玩家是房主

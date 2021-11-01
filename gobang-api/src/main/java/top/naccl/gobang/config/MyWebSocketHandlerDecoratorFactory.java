@@ -1,12 +1,15 @@
 package top.naccl.gobang.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 import top.naccl.gobang.manager.SessionManager;
+import top.naccl.gobang.service.GameLobbyService;
 
 import java.security.Principal;
 
@@ -16,10 +19,15 @@ import java.security.Principal;
  * @Date: 2020-11-09
  */
 @Slf4j
+@Component
 public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecoratorFactory {
+
+	@Autowired
+	private MyWebSocketHandlerDecorator myWebSocketHandlerDecorator;
+
 	@Override
 	public WebSocketHandler decorate(WebSocketHandler handler) {
-		return new WebSocketHandlerDecorator(handler) {
+		return new MyWebSocketHandlerDecorator(handler) {
 			@Override
 			public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 				log.info("一个客户端成功连接: sessionId = {}", session.getId());
@@ -41,8 +49,10 @@ public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecor
 				if (principal != null) {
 					//将websocket移出session管理器
 					SessionManager.remove(principal.getName());
-					//todo 如果此用户创建了房间，将房间移除或转让房主
-
+					//如果此用户创建了房间，将房间移除或转让房主
+					BeanFactory beanFactory = MyWebSocketHandlerDecorator.getBeanFactory();
+					GameLobbyService gameLobbyService = (GameLobbyService) beanFactory.getBean("gameLobbyServiceImpl");
+					gameLobbyService.exitRoom(principal.getName());
 				}
 				super.afterConnectionClosed(session, closeStatus);
 			}
