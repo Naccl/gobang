@@ -1,8 +1,9 @@
 package top.naccl.gobang.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
@@ -20,14 +21,13 @@ import java.security.Principal;
  */
 @Slf4j
 @Component
-public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecoratorFactory {
+public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecoratorFactory , BeanFactoryAware {
 
-	@Autowired
-	private MyWebSocketHandlerDecorator myWebSocketHandlerDecorator;
+	private BeanFactory beanFactory;
 
 	@Override
 	public WebSocketHandler decorate(WebSocketHandler handler) {
-		return new MyWebSocketHandlerDecorator(handler) {
+		return new MyWebSocketHandlerDecorator(handler,beanFactory) {
 			@Override
 			public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 				log.info("一个客户端成功连接: sessionId = {}", session.getId());
@@ -50,12 +50,16 @@ public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecor
 					//将websocket移出session管理器
 					SessionManager.remove(principal.getName());
 					//如果此用户创建了房间，将房间移除或转让房主
-					BeanFactory beanFactory = MyWebSocketHandlerDecorator.getBeanFactory();
 					GameLobbyService gameLobbyService = (GameLobbyService) beanFactory.getBean("gameLobbyServiceImpl");
 					gameLobbyService.exitRoom(principal.getName());
 				}
 				super.afterConnectionClosed(session, closeStatus);
 			}
 		};
+	}
+
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+		this.beanFactory = beanFactory;
 	}
 }
