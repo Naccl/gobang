@@ -11,6 +11,7 @@ import top.naccl.gobang.mapper.ScoreMapper;
 import top.naccl.gobang.model.entity.Game;
 import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.Room;
+import top.naccl.gobang.model.message.MatchingMQEventMessage;
 import top.naccl.gobang.rabbitmq.MQSender;
 import top.naccl.gobang.redis.RedisService;
 import top.naccl.gobang.service.GameLobbyService;
@@ -77,8 +78,10 @@ public class GameLobbyServiceImpl implements GameLobbyService {
     public void joinMatching(String username) {
         int score = scoreMapper.findScoreByUsername(username).getScore();
         redisService.set(username, "1");
+        MatchingMQEventMessage message = new MatchingMQEventMessage();
+        message.setUsername(username);
         if (score < 100) {
-            mqSender.sent_100(username);
+            mqSender.sent_100(message);
         }
     }
 
