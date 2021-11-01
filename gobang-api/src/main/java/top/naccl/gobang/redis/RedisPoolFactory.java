@@ -5,12 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import top.naccl.gobang.config.RedisConfig;
 
 @Service
 public class RedisPoolFactory {
 
 	@Autowired
-	RedisConfig redisConfig;
+    RedisConfig redisConfig;
 	
 	@Bean
 	public JedisPool JedisPoolFactory() {

@@ -1,23 +1,21 @@
 package top.naccl.gobang.config;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Configuration
 public class MQConfig {
-
-	/**
-	 * /usr/sbin/rabbitmq-plugins enable rabbitmq_management
-	 * mq页面
-	 */
+	// 队列
 	public static final String TOPIC_QUEUE_100 = "queue_100";
 
+	// 路由键
 	public static final String TOPIC_ROUTINGKEY_100 = "topic.routing.100";
 
+	// 交换机模式
 	public static final String FANOUT_EXCHANGE = "fanout_exchange";
 	public static final String DIRECT_EXCHANGE = "direct_exchange";
 	public static final String TOPIC_EXCHANGE = "topic_exchange";

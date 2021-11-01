@@ -17,13 +17,14 @@ import java.util.Objects;
  * @description: TODO
  */
 public class RabbitmqUtils {
-    private static Logger log = LoggerFactory.getLogger(RabbitmqUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(RabbitmqUtils.class);
 
+    // 暂时不可用，rabbitTemplate为空
     public static int getMessageCount(String queue) {
         if (StringUtils.isEmpty(queue)) {
             log.error("getMessageCount 参数不能为空");
         }
-        RabbitTemplate rabbitTemplate = new RabbitTemplate();
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(); // null
         return Objects.requireNonNull(rabbitTemplate.execute(new ChannelCallback<AMQP.Queue.DeclareOk>() {
             public AMQP.Queue.DeclareOk doInRabbit(Channel channel) throws Exception {
                 return channel.queueDeclarePassive(queue);

@@ -71,7 +71,7 @@ public class RedisService {
 		Jedis jedis = null;
 		Long result = null;
 		try {
-			jedis =  jedisPool.getResource();
+			jedis = jedisPool.getResource();
 			result = jedis.expire(key, expireTime);
 		} catch (Exception e) {
 			logger.error("key失效：" + key);
@@ -87,11 +87,11 @@ public class RedisService {
 	 * @param key
 	 * @return String
 	 */
-    public  String get(String key) {
+    public String get(String key) {
         Jedis jedis = null;
         String result = null;
         try {
-            jedis =  jedisPool.getResource();
+            jedis = jedisPool.getResource();
             result = jedis.get(key);
         } catch (Exception e) {
 			logger.error("key失效：" + key);
@@ -103,11 +103,11 @@ public class RedisService {
     }
 
 
-    public  String getset(String key, String value){
+    public String getset(String key, String value){
         Jedis jedis = null;
         String result = null;
         try {
-            jedis =  jedisPool.getResource();
+            jedis = jedisPool.getResource();
             result = jedis.getSet(key, value);
         } catch (Exception e) {
 			logger.error("key失效：" + key);
@@ -118,11 +118,11 @@ public class RedisService {
         return result;
     }
 
-    public  Long del(String key) {
+    public Long del(String key) {
         Jedis jedis = null;
         Long result = null;
         try {
-            jedis =  jedisPool.getResource();
+            jedis = jedisPool.getResource();
             result = jedis.del(key);
         } catch (Exception e) {
 			logger.error("key失效：" + key);
@@ -140,7 +140,7 @@ public class RedisService {
 			List<String> keys = new ArrayList<String>();
 			String cursor = "0";
 			ScanParams sp = new ScanParams();
-			sp.match("*"+key+"*");
+			sp.match("*" + key + "*");
 			sp.count(100);
 			do {
 				ScanResult<String> ret = jedis.scan(cursor, sp);
