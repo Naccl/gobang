@@ -76,6 +76,10 @@ public class GameLobbyServiceImpl implements GameLobbyService {
 
     @Override
     public void joinMatching(String username) {
+        if (scoreMapper.findScoreByUsername(username) == null) {
+            return;
+//            scoreMapper.insertScore(username);
+        }
         int score = scoreMapper.findScoreByUsername(username).getScore();
         redisService.set(username, "1");
         MatchingMQEventMessage message = new MatchingMQEventMessage();

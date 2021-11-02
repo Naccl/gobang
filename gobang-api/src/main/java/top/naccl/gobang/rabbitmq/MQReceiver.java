@@ -36,7 +36,7 @@ public class MQReceiver {
 		MatchingMQEventMessage matchingMessage = JacksonUtils.readValue(message, MatchingMQEventMessage.class);
 		String username = matchingMessage.getUsername();
 		log.info("receive message: {}", username);
-		if (!redisService.get(username).equals("0")) {
+		if (redisService.get(username) != null && !redisService.get(username).equals("0")) {
 			// 如果用户没有取消匹配
 			// 如果匹配不到，取消了，就将第一次进入队列的用户置空并且消息不处理直接ack
 			if (!StringUtils.isEmpty(waitName) && redisService.get(waitName).equals("0")) {
@@ -61,9 +61,13 @@ public class MQReceiver {
 			// 设置为不批量应答
 			channel.basicAck(deliveryTag, false);
 			//重新进入队列
-//			channel.basicNack(deliveryTag, false, true);
 		} catch (IOException e) {
 			e.printStackTrace();
+			try {
+				channel.basicNack(deliveryTag, false, true);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
 		}
 	}
 }

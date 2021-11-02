@@ -10,4 +10,8 @@
         update score set score=score+#{score} where id = (select id from user where username = #{username})
     </update>
 
+    <insert id="insertScore">
+--         todo
+    </insert>
+
 </mapper>

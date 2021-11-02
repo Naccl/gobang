@@ -10,4 +10,6 @@ public interface ScoreMapper  {
     Score findScoreByUsername(String username);
 
     void updateScore(int score, String username);
+
+    void insertScore(String username);
 }
