@@ -2,9 +2,11 @@ package top.naccl.gobang.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 
@@ -14,11 +16,36 @@ import java.util.List;
 @Slf4j
 @Service
 public class RedisService implements InitializingBean {
+	@Value("${spring.redis.host}")
+	private String host;
+	@Value("${spring.redis.port}")
+	private int port;
+	@Value("${spring.redis.password}")
+	private String password;
+	@Value("${spring.redis.database}")
+	private int database;
+	@Value("${spring.redis.timeout}")
+	private int timeout;//秒
+	@Value("${spring.redis.jedis.pool.max-idle}")
+	private int poolMaxIdle;
+	@Value("${spring.redis.jedis.pool.max-total}")
+	private int poolMaxTotal;
+	@Value("${spring.redis.jedis.pool.max-wait}")
+	private int poolMaxWait;//秒
+
 	private JedisPool jedisPool;
+
+	private JedisPool getJedisPool() {
+		JedisPoolConfig poolConfig = new JedisPoolConfig();
+		poolConfig.setMaxIdle(poolMaxIdle);
+		poolConfig.setMaxTotal(poolMaxTotal);
+		poolConfig.setMaxWaitMillis(poolMaxWait * 1000L);
+		return new JedisPool(poolConfig, host, port, timeout * 1000, password, database);
+	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		this.jedisPool = new JedisPool();
+		this.jedisPool = getJedisPool();
 	}
 
 	/**
