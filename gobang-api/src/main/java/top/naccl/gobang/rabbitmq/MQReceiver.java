@@ -1,9 +1,7 @@
 package top.naccl.gobang.rabbitmq;
 
-
 import com.rabbitmq.client.Channel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,56 +16,54 @@ import top.naccl.gobang.util.JacksonUtils;
 
 import java.io.IOException;
 
+@Slf4j
 @Service
 public class MQReceiver {
-	private static final Logger log = LoggerFactory.getLogger(MQReceiver.class);
-
 	@Autowired
 	private GameLobbyService gameLobbyService;
-
 	@Autowired
 	private RedisService redisService;
 
-//	private ReentrantLock lock = new ReentrantLock();
-	private  String waitName = null;
+	//正在等待匹配的用户
+	private String waitName = null;
+
 	// 为了消息的可靠性，设置为手动应答
 	@RabbitListener(queues = MQConfig.TOPIC_QUEUE_100, ackMode = "MANUAL")
 	public void receive(byte[] message, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, Channel channel) {
 		MatchingMQEventMessage matchingMessage = JacksonUtils.readValue(message, MatchingMQEventMessage.class);
 		String username = matchingMessage.getUsername();
 		log.info("receive message: {}", username);
-		if (redisService.get(username) != null && !redisService.get(username).equals("0")) {
-			// 如果用户没有取消匹配
-			// 如果匹配不到，取消了，就将第一次进入队列的用户置空并且消息不处理直接ack
-			if (!StringUtils.isEmpty(waitName) && redisService.get(waitName).equals("0")) {
+
+		if ("1".equals(redisService.get(username))) {
+			//当前用户没有取消匹配
+			if (!StringUtils.isEmpty(waitName) && "1".equals(redisService.get(waitName))) {
+				//已有一个用户正在等待匹配，且他没有取消匹配
+				if (!(redisService.del(username) == 0) && !(redisService.del(waitName) == 0)) {
+					//匹配成功
+					//ack这条消息
+				} else {
+					//至少有一个牛逼用户取消了匹配，这时候怎么办呢
+					log.warn("An user cancel match, username: {}, waitName: {}", username, waitName);
+					//直接让他们匹配成功
+				}
+				gameLobbyService.createRoom(waitName);
+				gameLobbyService.enterRoom(waitName, username);
 				waitName = null;
-			} else if (StringUtils.isEmpty(waitName)) {
-				// 匹配到第一个玩家
-				// 校验一下，防止玩家在该处取消匹配
-				if(!(redisService.del(username).equals(0))) {
-					waitName = username;
-				}
+				//ack这条消息
 			} else {
-				// 匹配到第二个玩家
-				// 直接删除第一个玩家信息，如果返回不为0 则表示有值
-				if (!(redisService.del(waitName).equals(0)) && redisService.del(username).equals(0)) {
-					gameLobbyService.createRoom(waitName);
-					gameLobbyService.enterRoom(waitName, username);
-					waitName = null;
-				}
+				//没有用户在等待匹配，将当前用户加入等待
+				//或上一个用户已经取消匹配，当前用户进入等待
+				waitName = username;
+				//ack这条消息
 			}
+		} else {
+			//该用户已经取消匹配，ack这条消息
 		}
 		try {
 			// 设置为不批量应答
 			channel.basicAck(deliveryTag, false);
-			//重新进入队列
 		} catch (IOException e) {
 			e.printStackTrace();
-			try {
-				channel.basicNack(deliveryTag, false, true);
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
 		}
 	}
 }

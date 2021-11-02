@@ -154,17 +154,15 @@ public class RedisService implements InitializingBean {
 
 	public Long del(String key) {
 		Jedis jedis = null;
-		Long result = null;
 		try {
 			jedis = jedisPool.getResource();
-			result = jedis.del(key);
+			return jedis.del(key);
 		} catch (Exception e) {
-			log.error("key失效：" + key);
+			e.printStackTrace();
+		} finally {
 			returnToPool(jedis);
-			return result;
 		}
-		jedis.close();
-		return result;
+		return Long.valueOf(0);
 	}
 
 	public List<String> scanKeys(String key) {
