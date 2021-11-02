@@ -1,5 +1,6 @@
 package top.naccl.gobang.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -15,6 +16,10 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
+
+	@Autowired
+	private MyWebSocketHandlerDecoratorFactory myWebSocketHandlerDecoratorFactory;
+
 	/**
 	 * 配置WebSocket进入点，开启SockJS，用于WebSocket握手连接
 	 *
@@ -50,6 +55,6 @@ public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
 	 */
 	@Override
 	public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
-		registry.addDecoratorFactory(new MyWebSocketHandlerDecoratorFactory());
+		registry.addDecoratorFactory(myWebSocketHandlerDecoratorFactory);
 	}
 }
