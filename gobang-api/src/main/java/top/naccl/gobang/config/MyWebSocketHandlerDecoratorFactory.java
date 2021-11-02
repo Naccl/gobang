@@ -1,16 +1,15 @@
 package top.naccl.gobang.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 import top.naccl.gobang.manager.SessionManager;
 import top.naccl.gobang.service.GameLobbyService;
+import top.naccl.gobang.util.SpringContextUtils;
 
 import java.security.Principal;
 
@@ -21,13 +20,10 @@ import java.security.Principal;
  */
 @Slf4j
 @Component
-public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecoratorFactory , BeanFactoryAware {
-
-	private BeanFactory beanFactory;
-
+public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecoratorFactory {
 	@Override
 	public WebSocketHandler decorate(WebSocketHandler handler) {
-		return new MyWebSocketHandlerDecorator(handler,beanFactory) {
+		return new WebSocketHandlerDecorator(handler) {
 			@Override
 			public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 				log.info("一个客户端成功连接: sessionId = {}", session.getId());
@@ -50,16 +46,11 @@ public class MyWebSocketHandlerDecoratorFactory implements WebSocketHandlerDecor
 					//将websocket移出session管理器
 					SessionManager.remove(principal.getName());
 					//如果此用户创建了房间，将房间移除或转让房主
-					GameLobbyService gameLobbyService = (GameLobbyService) beanFactory.getBean("gameLobbyServiceImpl");
+					GameLobbyService gameLobbyService = SpringContextUtils.getBean("gameLobbyServiceImpl", GameLobbyService.class);
 					gameLobbyService.exitRoom(principal.getName());
 				}
 				super.afterConnectionClosed(session, closeStatus);
 			}
 		};
-	}
-
-	@Override
-	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		this.beanFactory = beanFactory;
 	}
 }
