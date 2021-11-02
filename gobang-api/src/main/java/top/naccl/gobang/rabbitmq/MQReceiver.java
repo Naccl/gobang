@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import top.naccl.gobang.config.MQConfig;
 import top.naccl.gobang.model.message.MatchingMQEventMessage;
-import top.naccl.gobang.redis.RedisService;
+import top.naccl.gobang.service.RedisService;
 import top.naccl.gobang.service.GameLobbyService;
 
 import java.io.IOException;

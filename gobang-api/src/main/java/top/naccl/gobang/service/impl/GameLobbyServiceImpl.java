@@ -13,7 +13,7 @@ import top.naccl.gobang.model.entity.Result;
 import top.naccl.gobang.model.entity.Room;
 import top.naccl.gobang.model.message.MatchingMQEventMessage;
 import top.naccl.gobang.rabbitmq.MQSender;
-import top.naccl.gobang.redis.RedisService;
+import top.naccl.gobang.service.RedisService;
 import top.naccl.gobang.service.GameLobbyService;
 
 import java.util.HashMap;
