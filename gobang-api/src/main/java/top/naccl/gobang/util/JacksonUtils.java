@@ -24,7 +24,25 @@ public class JacksonUtils {
 		}
 	}
 
+	public static byte[] writeValueAsBytes(Object value) {
+		try {
+			return objectMapper.writeValueAsBytes(value);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	public static <T> T readValue(String content, Class<T> valueType) {
+		try {
+			return objectMapper.readValue(content, valueType);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static <T> T readValue(byte[] content, Class<T> valueType) {
 		try {
 			return objectMapper.readValue(content, valueType);
 		} catch (IOException e) {

@@ -81,6 +81,10 @@ public class GameLobbyController {
 	// 加入匹配
 	@MessageMapping("/matching")
 	public void matching(Principal principal) {
+		if (principal.getName() == null) {
+			log.error("登录过期");
+			return;
+		}
 		String username = principal.getName();
 		gameLobbyService.joinMatching(username);
 	}

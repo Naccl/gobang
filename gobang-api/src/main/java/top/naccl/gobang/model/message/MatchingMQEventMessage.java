@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 /**
  * @program: gobang
  * @author: ChenJin
@@ -16,7 +18,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class MatchingMQEventMessage {
+public class MatchingMQEventMessage implements Serializable {
 
     // 当前用的用户名进行匹配
     private String username;

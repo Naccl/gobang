@@ -12,8 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import top.naccl.gobang.config.MQConfig;
 import top.naccl.gobang.model.message.MatchingMQEventMessage;
-import top.naccl.gobang.service.RedisService;
 import top.naccl.gobang.service.GameLobbyService;
+import top.naccl.gobang.service.RedisService;
+import top.naccl.gobang.util.JacksonUtils;
 
 import java.io.IOException;
 
@@ -31,7 +32,8 @@ public class MQReceiver {
 	private  String waitName = null;
 	// 为了消息的可靠性，设置为手动应答
 	@RabbitListener(queues = MQConfig.TOPIC_QUEUE_100, ackMode = "MANUAL")
-	public void receive(MatchingMQEventMessage matchingMessage, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, Channel channel) {
+	public void receive(byte[] message, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag, Channel channel) {
+		MatchingMQEventMessage matchingMessage = JacksonUtils.readValue(message, MatchingMQEventMessage.class);
 		String username = matchingMessage.getUsername();
 		log.info("receive message: {}", username);
 		if (!redisService.get(username).equals("0")) {
