@@ -36,8 +36,8 @@ public class MQReceiver {
 
 		if ("1".equals(redisService.get(username))) {
 			//当前用户没有取消匹配
-			if (!StringUtils.isEmpty(waitName) && "1".equals(redisService.get(waitName))) {
-				//已有一个用户正在等待匹配，且他没有取消匹配
+			if (!StringUtils.isEmpty(waitName) && "1".equals(redisService.get(waitName)) && !waitName.equals(username)) {
+				//已有一个用户正在等待匹配，且他没有取消匹配，并且不能是自己
 				if (!(redisService.del(username) == 0) && !(redisService.del(waitName) == 0)) {
 					//匹配成功
 					//ack这条消息
